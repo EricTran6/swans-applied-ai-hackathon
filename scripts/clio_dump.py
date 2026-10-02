@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-"""GET-only Clio dump of the Sapini matter into .cache/clio/. Stdlib only."""
-import json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
+"""GET-only Clio dump of one matter into .cache/clio/. Stdlib only.
+
+Usage: clio_dump.py --matter-id <id> [subset ...]   (or set CLIO_MATTER_ID)
+"""
+import argparse, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, ".cache", "clio")
-MATTER_ID, CLIENT_ID = 1811202578, 2437351988
+MATTER_ID = CLIENT_ID = None  # set at runtime: --matter-id / CLIO_MATTER_ID; client from the matter
 DROPPED = []  # (resource, field, reason)
 
 
 def load_env():
     env = {}
-    with open(os.path.join(ROOT, ".env")) as f:
+    path = os.path.join(ROOT, ".env")
+    if not os.path.exists(path):
+        return env
+    with open(path) as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
@@ -20,11 +26,19 @@ def load_env():
 
 
 ENV = load_env()
-BASE = ENV["CLIO_BASE_URL"].rstrip("/")
-if not BASE.endswith("/api/v4"):
-    BASE += "/api/v4"
-TOKEN = ENV["CLIO_ACCESS_TOKEN"]
-HOST = urllib.parse.urlparse(BASE).netloc
+BASE = TOKEN = HOST = None
+
+
+def init_clio():
+    global BASE, TOKEN, HOST
+    missing = [k for k in ("CLIO_BASE_URL", "CLIO_ACCESS_TOKEN") if not ENV.get(k)]
+    if missing:
+        sys.exit(f"error: missing {', '.join(missing)} in .env")
+    BASE = ENV["CLIO_BASE_URL"].rstrip("/")
+    if not BASE.endswith("/api/v4"):
+        BASE += "/api/v4"
+    TOKEN = ENV["CLIO_ACCESS_TOKEN"]
+    HOST = urllib.parse.urlparse(BASE).netloc
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -189,13 +203,48 @@ CMSG_F = ["id", "subject", "body", "type", "sent_at", "received_at", "created_at
           "matter{id}", "has_attachments", "attachments{id,name}"]
 
 
+def parse_args():
+    ap = argparse.ArgumentParser(description="GET-only Clio dump of one matter into .cache/clio/.")
+    ap.add_argument("--matter-id", help="Clio matter id (overrides env CLIO_MATTER_ID)")
+    ap.add_argument("only", nargs="*", help="optional subset, e.g. notes tasks")
+    args = ap.parse_args()
+    mid = args.matter_id or os.environ.get("CLIO_MATTER_ID") or ENV.get("CLIO_MATTER_ID")
+    if not mid or not str(mid).strip().isdigit():
+        ap.print_usage(sys.stderr)
+        sys.exit("error: matter id required: pass --matter-id <id> or set CLIO_MATTER_ID")
+    return int(mid), set(args.only)
+
+
+def resolve_client_id(matter):
+    """Client id from the fetched matter, else the cached matter.json, else fetch the matter."""
+    if matter is None:
+        path = os.path.join(OUT, "matter.json")
+        if os.path.exists(path):
+            with open(path) as f:
+                cached = json.load(f)
+            if cached and cached.get("id") == MATTER_ID:
+                matter = cached
+    if matter is None:
+        matter = fetch_all("matter", f"matters/{MATTER_ID}.json", {}, MATTER_F, single=True)
+    cid = ((matter or {}).get("client") or {}).get("id")
+    if not cid:
+        sys.exit(f"error: could not determine client id for matter {MATTER_ID}")
+    return cid
+
+
 def main():
+    global MATTER_ID, CLIENT_ID
+    MATTER_ID, only = parse_args()
+    init_clio()
     os.makedirs(os.path.join(OUT, "documents"), exist_ok=True)
-    only = set(sys.argv[1:])
     run = lambda n: not only or n in only
 
+    matter = None
     if run("matter"):
-        save("matter", fetch_all("matter", f"matters/{MATTER_ID}.json", {}, MATTER_F, single=True))
+        matter = fetch_all("matter", f"matters/{MATTER_ID}.json", {}, MATTER_F, single=True)
+        save("matter", matter)
+    if run("contacts") or run("notes"):
+        CLIENT_ID = resolve_client_id(matter)
     if run("custom_fields"):
         save("custom_fields", fetch_all("custom_fields", "custom_fields.json", {"parent_type": "matter"},
              ["id", "name", "field_type", "parent_type", "displayed", "required",
