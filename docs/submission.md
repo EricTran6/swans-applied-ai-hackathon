@@ -64,6 +64,11 @@ Measured on the Sapini matter (219 Clio records, 31 PDFs / 361 pages), 2026-10-0
 
 ## 5. Differentiators & What We're Proud Of
 
+### What no one else shows: who gets paid
+- A "Who gets paid" recovery map on the attorney brief: settlement slider capped at the live coverage limit; splits each dollar across attorney fee, firm costs, liens, each treating provider's bill, and the client; every input links to its Clio source.
+- Flags when a case is underwater (bills + liens + fee exceed available coverage) and computes the uniform provider reduction needed for the client to net a target. Answers the slide-5 point that liens are negotiated down at the end.
+- Pure, unit-tested code (`src/lib/digest/recovery.ts`), no AI, $0 per open. Attorney-only; never included in a provider share.
+
 ### Design Principles
 - **Every fact is traceable**: No floating numbers. Click any date, dollar amount, or finding → opens the source note/email/document/PDF with the exact quote highlighted at the page and character level.
 - **Cached & efficient**: Digest keyed by content hash (not timestamps); second opens cost zero API calls. Judges can reopen the same matter repeatedly without re-running AI.
@@ -94,28 +99,22 @@ Measured on the Sapini matter (219 Clio records, 31 PDFs / 361 pages), 2026-10-0
 
 4. **Clio per-record deep links not used**: The in-app evidence drawer (with highlighted quote and PDF at page) is the source of truth, not per-record Clio web URLs (which are unverified in Clio's API).
 
-5. **Dev-only routes not removed yet**: `src/app/dev/**` (fixture preview pages: `/dev/brief`, `/dev/evidence`, `/dev/share-builder`, `/dev/provider`) will be deleted before final submission. They exist for development and testing only; judges will not see them.
-
 ### Hardcoding in the Repo
 
 1. **`scripts/clio_dump.py`**: Previously hardcoded specific matter and client IDs for the test case. Fix applied: now reads from `CLIO_MATTER_ID` env var. Use `CLIO_MATTER_ID=<id> python3 scripts/clio_dump.py` to fetch any matter.
 
 2. **No hardcoded case data in `src/`**: All logic is generic (signal terms, coverage layers, task assignment rules). Matter IDs come from URLs or CLI args; provider names and case values are fetched from Clio.
 
+3. **Recovery map defaults**: Attorney fee 33⅓% and client target "rule of thirds" (1/3 of settlement) are generic, editable assumptions (`DEFAULT_FEE_PCT`, `DEFAULT_CLIENT_TARGET_SHARE` in `src/lib/digest/recovery.ts`), not case data; Clio has no fee field. Payout order (liens before providers, providers pro rata) is illustrative, not a distribution statement.
+
 ### Half-Done Features (Would Complete if Time Allowed)
 
-1. **Provider replies** (structure in DB, endpoints in place): UI confirmation screen. Currently stored in `share_responses` table but not displayed in the share history.
+1. **Ball-in-court label** on action board: AI-suggested label for tasks. Scoring rule in place; UI label not rendered.
 
-2. **Conflicts popover** on KPI value bar: Shows alternate sources when coverage or case value have conflicting recent notes. UI placeholder; code is in place.
-
-3. **Ball-in-court label** on action board: AI-suggested label for tasks. Scoring rule in place; UI label not rendered.
-
-4. **Care team & findings** on provider view: Optional section showing treating providers and findings from injuries (gated on HIPAA field). Database structure in place; UI rendering not implemented.
+2. **Care team & findings** on provider view: Optional section showing treating providers and findings from injuries (gated on HIPAA field). Database structure in place; UI rendering not implemented.
 
 ## Next Steps if Continuing
 
-- [ ] Implement UI for provider replies in share history
-- [ ] Add conflicts popover to KPI row
 - [ ] Render care team on provider view (if HIPAA field is true)
 - [ ] Add "ball-in-court" label to action board waiting-on items
 - [ ] Email notification preference in provider profile (not yet connected to actual email)
@@ -131,4 +130,4 @@ Measured on the Sapini matter (219 Clio records, 31 PDFs / 361 pages), 2026-10-0
 - [x] Tests pass: `npm test`
 - [x] Fixtures work: `CLIO_FIXTURE_DIR=fixtures/clio npm run dev`
 - [ ] 90-second demo clip uploaded to Google Drive (TBD)
-- [ ] Dev-only routes deleted from `src/app/dev/` before final push
+- [x] Dev-only routes deleted from `src/app/dev/` before final push
