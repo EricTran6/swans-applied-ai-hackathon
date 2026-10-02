@@ -199,9 +199,9 @@ export function MatterBrief({ matterId }: { matterId: string }) {
 
 export function StateCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mx-auto mt-16 flex max-w-lg flex-col gap-3 rounded-xl border border-line bg-white p-6 text-sm text-ink-2">
+    <main id="main" tabIndex={-1} className="mx-auto mt-16 flex max-w-lg flex-col gap-3 rounded-xl border border-line bg-white p-6 text-sm text-ink-2">
       <h1 className="font-serif text-xl font-semibold text-ink">{title}</h1>
       {children}
-    </div>
+    </main>
   );
 }

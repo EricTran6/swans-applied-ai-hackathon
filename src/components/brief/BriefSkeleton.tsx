@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function BriefSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-4 px-4 py-6 sm:px-6" aria-busy="true" aria-label="Loading brief">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-[1360px] flex-col gap-4 px-4 py-6 sm:px-6" aria-busy="true" aria-label="Loading brief">
       <div className="flex gap-4 rounded-xl border border-line bg-white p-5">
         <Skeleton className="size-16 rounded-full" />
         <div className="flex-1 space-y-2">
@@ -19,6 +19,6 @@ export function BriefSkeleton() {
         <Skeleton className="h-48 rounded-xl" />
       </div>
       <Skeleton className="h-32 rounded-xl" />
-    </div>
+    </main>
   );
 }

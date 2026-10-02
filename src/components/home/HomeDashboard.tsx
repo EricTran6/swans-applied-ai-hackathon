@@ -113,7 +113,7 @@ export function HomeDashboard({ firmName }: { firmName: string | null }) {
 
   const showRail = state.kind === "ok" && matters.length > 0;
   return (
-    <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-6">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-6">
       <TopBar firmName={firmName} conn={conn} />
       <div className={cn("grid grid-cols-1 gap-6", showRail && "xl:grid-cols-[minmax(0,1fr)_340px]")}>
         <div className="min-w-0">{main}</div>

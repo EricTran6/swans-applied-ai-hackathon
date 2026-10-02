@@ -92,7 +92,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
               ))}
 
               {layout.ticks.map((t) => (
-                <span key={`tk-${t.label}`} className="absolute -translate-x-1/2 font-mono text-[11px] text-ink-2" style={{ left: t.x, top: axisY + 12 }}>
+                <span key={`tk-${t.label}`} className="absolute -translate-x-1/2 font-mono text-xs text-ink-2" style={{ left: t.x, top: axisY + 12 }}>
                   <span aria-hidden className="absolute -top-3 left-1/2 h-1.5 w-px bg-ink-2" />
                   {t.label}
                 </span>
@@ -145,7 +145,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
                           className="pointer-events-none absolute flex flex-col items-center overflow-hidden text-center leading-tight"
                           style={{ left: c.label.left - c.x + 12, width: c.label.right - c.label.left, top: boxTop(c.label) - (axisY - 12), height: LABEL_H, justifyContent: c.label.side === "above" ? "flex-end" : "flex-start" }}
                         >
-                          <span className="font-mono text-[11px] whitespace-nowrap text-ink-2">{c.label.date}</span>
+                          <span className="font-mono text-xs whitespace-nowrap text-ink-2">{c.label.date}</span>
                           <span className="max-w-full truncate text-[13px] font-semibold text-ink">{c.label.text}</span>
                         </span>
                       </>
@@ -161,7 +161,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
                         className={cn("flex items-center justify-center rounded-full border-2 bg-white", multi ? "size-5" : "size-3.5")}
                         style={{ borderColor: color }}
                       >
-                        {multi ? <span className="text-[10px] leading-none font-bold text-ink">{c.events.length}</span> : <span className="size-1.5 rounded-full" style={{ background: color }} />}
+                        {multi ? <span className="text-xs leading-none font-bold text-ink">{c.events.length}</span> : <span className="size-1.5 rounded-full" style={{ background: color }} />}
                       </span>
                       {isNew && <span aria-hidden className="absolute top-0 right-0 size-2.5 rounded-full border border-white bg-info" />}
                     </button>
@@ -183,7 +183,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
                             >
                               <span aria-hidden className="mt-1 size-2 shrink-0 rounded-full" style={{ background: CATEGORY_COLOR[e.category] }} />
                               <span className="min-w-0">
-                                <span className="block font-mono text-[11px] text-ink-2">{formatDate(e.date)} · {CATEGORY_LABEL[e.category]}</span>
+                                <span className="block font-mono text-xs text-ink-2">{formatDate(e.date)} · {CATEGORY_LABEL[e.category]}</span>
                                 <span className="line-clamp-2 text-[13px] font-medium text-ink" title={e.title}>{e.title}</span>
                               </span>
                             </button>

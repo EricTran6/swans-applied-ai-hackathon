@@ -18,7 +18,7 @@ function StatusRail({ view }: { view: ProviderView }) {
         {STAGES.map((s, i) => (
           <li key={s} className="flex flex-1 flex-col items-center text-center" aria-current={i === cur ? "step" : undefined}>
             <span className={`h-3 w-3 rounded-full ${i < cur ? "bg-primary/50" : i === cur ? "bg-primary ring-4 ring-primary/20" : "bg-muted"}`} />
-            <span className={`mt-1 text-[11px] leading-tight ${i === cur ? "font-semibold" : "text-muted-foreground"}`}>{s}</span>
+            <span className={`mt-1 text-xs leading-tight ${i === cur ? "font-semibold" : "text-muted-foreground"}`}>{s}</span>
           </li>
         ))}
       </ol>
@@ -33,7 +33,7 @@ function StatusRail({ view }: { view: ProviderView }) {
 export function ProviderViewCard({ view, token }: { view: ProviderView; token?: string }) {
   const cov = view.coverage;
   return (
-    <main className="mx-auto w-full max-w-xl space-y-4 bg-background p-4 text-foreground">
+    <main id="main" tabIndex={-1} className="mx-auto w-full max-w-xl space-y-4 bg-background p-4 text-foreground">
       <header>
         <p className="text-xs uppercase tracking-wide text-muted-foreground">{view.firmName}</p>
         <h1 className="text-xl font-semibold">Case update for {view.recipientLabel}</h1>

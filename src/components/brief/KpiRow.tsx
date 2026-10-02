@@ -92,7 +92,7 @@ export function RangeBar({ low, high, cap }: { low: number | null; high: number 
           <div className="absolute -top-1 -bottom-1 w-0.5 bg-ink" style={{ left: `calc(${l.capPct}% - 1px)` }} />
         )}
       </div>
-      <div className="relative mt-1 h-4 font-mono text-[11px] text-ink-2">
+      <div className="relative mt-1 h-4 font-mono text-xs text-ink-2">
         {l.ticks.map((t, i) => (
           <span
             key={t.pct}

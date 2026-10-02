@@ -34,7 +34,7 @@ export function Refs({ refs, max = 3, className }: { refs: SourceRef[]; max?: nu
       {/* the overflow count stays glued to the final chip so it never dangles on its own */}
       <span className="inline-flex items-center gap-1 whitespace-nowrap">
         <SourceChip key={`${shown[last].drawerKey}-${last}`} sourceRef={shown[last]} label={chipLabel(shown[last])} />
-        {overflow > 0 && <span className="font-mono text-[11px] text-ink-2" title={`${overflow} more source${overflow > 1 ? "s" : ""}`}>+{overflow}</span>}
+        {overflow > 0 && <span className="font-mono text-xs text-ink-2" title={`${overflow} more source${overflow > 1 ? "s" : ""}`}>+{overflow}</span>}
       </span>
     </span>
   );
