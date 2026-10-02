@@ -1,330 +1,221 @@
 # Case Lens: AI-Powered Legal Case Dashboard
 
-A visual case digest tool that helps law firms and medical providers understand personal injury matters faster. Two audiences, two views:
+Case Lens reads a live personal-injury matter from Clio Manage (read-only) and turns it into a visual, cited brief. It serves two audiences:
 
-1. **Attorney Dashboard**: Get up to speed in 90 seconds with a visual brief, key metrics (case value vs. coverage), action items, timeline, and full-text search.
-2. **Provider Share**: Treating providers see case status, their role in treatment, what you need from them, and their bill—without case strategy, valuations, or other providers' confidential information.
+1. **Attorneys and staff** get up to speed in about two minutes: a cited brief, KPIs, a story-so-far timeline, a "who gets paid" recovery map, the action board, injuries, and every record one click away.
+2. **Treating medical providers** get a curated share link that shows case status, what the firm needs from them, and their own bill. Case strategy, valuation, and other providers' information are never included.
 
-## Screenshots
-Placeholder: Attorney dashboard (brief + KPIs + injuries + action board) | Provider view (mobile, status rail + needs) | Share builder (checklist with hard-deny locks)
+## Principles
 
-## What You're Looking At
-
-**Goal**: Digest a live Clio Manage case (read-only) into a visual summary, cached and re-used, with every fact traceable to its source.
-
-**Core principles**:
-- **No hardcoded data**: The matter and provider names come from the URL and Clio API; logic is generic personal-injury rules.
-- **Read-only to Clio**: Only GET requests; persistence lives in our own SQLite database.
-- **Every fact is traceable**: Click any date, dollar amount, or finding to open the source note, email, document (with quote highlighted), or PDF at the exact page.
-- **Cached & efficient**: Digest computed once per input-set change (keyed by content hash); second opens cost zero API calls.
+- **No hardcoded case data.** The matter comes from the URL and the Clio API. All logic is generic personal-injury rules.
+- **Read-only to Clio.** The Clio client only issues GET requests. Shares, caches, and view tracking live in our own SQLite database.
+- **Every fact is traceable.** Click any date, dollar amount, or finding to open the source note, email, task, or document. PDFs open at the cited page with the quote highlighted.
+- **Digest once, then cache.** The digest is keyed by a hash of the matter's record contents. Opening an unchanged matter makes zero AI calls and costs $0.00.
 
 ## Prerequisites
 
 - Node.js 20+
-- An Anthropic API key (`ANTHROPIC_API_KEY`)
-- Access to Clio Manage (OAuth connection or API token)
+- An Anthropic API key
+- A Clio Manage account (OAuth app credentials, or an access token)
 
-## Quick Start
-
-### 1. Install & prepare
+## Quick start
 
 ```bash
 npm ci
-cp .env.example .env
+cp .env.example .env    # then fill in the values below
+npm run dev             # http://127.0.0.1:3000
 ```
 
-### 2. Set up environment variables
+Connect Clio in one of two ways:
 
-Edit `.env` and fill in:
-- `ANTHROPIC_API_KEY`: Your Anthropic API key
-- `CLIO_BASE_URL`: Clio URL (default: `https://app.clio.com`)
-- `CLIO_ACCESS_TOKEN` and `CLIO_REFRESH_TOKEN`: OAuth tokens (OR)
-- `CLIO_CLIENT_ID`, `CLIO_CLIENT_SECRET`: For OAuth flow
+- **OAuth (recommended):** set `CLIO_CLIENT_ID` and `CLIO_CLIENT_SECRET`, register `http://127.0.0.1:3000/api/auth/clio/callback` as the redirect URI in Clio, then open the app and click **Connect Clio**. Tokens are stored in the local database and refreshed automatically.
+- **Access token:** set `CLIO_ACCESS_TOKEN` in `.env`.
 
-**Option A: Use OAuth in the app**
-```bash
-npm run dev
-```
-Open `http://127.0.0.1:3000` → click `/connect` to authorize Clio. Tokens stored in the database.
+Then pick a matter on the home page and open its brief. The first open syncs from Clio and builds the digest (about $0.15 in AI calls). Later opens are served from cache.
 
-**Option B: Paste a token directly**
-```bash
-echo "CLIO_ACCESS_TOKEN=<your-token>" >> .env
-npm run dev
-```
-
-### 3. Run the dev server
-
-```bash
-npm run dev
-```
-
-Open `http://127.0.0.1:3000`:
-- **Landing page** (`/`): List of accessible matters. Click one to open the brief.
-- **Attorney dashboard** (`/matters/[matterId]`): Visual digest with header, KPIs, brief, top-10, action board, injuries, timeline.
-- **Share builder** (`/matters/[matterId]/share`): Create and manage provider shares.
-- **Provider view** (`/s/[token]`): Mobile-friendly share link (expires, can be revoked).
-
-### 4. Demo with fixtures (no Clio access needed)
-
-To preview with synthetic data:
+### Demo with fixtures (no Clio access)
 
 ```bash
 CLIO_FIXTURE_DIR=fixtures/clio npm run dev
 ```
 
-This reads from `fixtures/clio/*.json` instead of making HTTP requests. The matter ID in the URL is ignored; fixtures always use the sample client "Jane Doe".
+The Clio client reads `fixtures/clio/*.json` instead of making HTTP requests. The fixtures are a synthetic client ("Jane Doe"), not real case data.
+
+## Pages
+
+| Route | What it shows |
+|---|---|
+| `/` | Home dashboard: Clio connection status, a "Today" strip (overdue, due soon, new activity), a card per open matter, provider share activity, and a short "how it works" |
+| `/connect` | Clio OAuth connection |
+| `/matters/[matterId]` | Attorney brief for one matter (see below) |
+| `/matters/[matterId]/share` | Share builder for sending a provider a curated view |
+| `/s/[token]` | Provider share page, mobile-first, expiring and revocable |
+
+### Attorney brief
+
+- **Header:** client, stage (inferred from Clio records), last client contact, next touchpoint, an "Open in Clio" link, the cache/cost badge, and a refresh action. A warnings banner groups anything the digest could not verify.
+- **KPI row:** case value range against the coverage cap, coverage layers, specials (medical bills), firm spend, last client contact, and next deadline.
+- **Brief:** four to five cited sentences, open questions, and "what reaches the client".
+- **Story so far:** a timeline strip of milestones, with long quiet gaps compressed and a Today marker.
+- **Who gets paid:** a settlement slider capped at the live coverage limit. It splits each dollar across attorney fee, firm costs, liens, each provider's bill, and the client. It flags underwater cases and shows the provider reduction the client needs to net a target. This is pure tested code with no AI, and it is never shared with providers.
+- **Provider bills**, **top 10 that matter** (of all items in Clio, each with a "why" line), and the **action board** (overdue, upcoming, waiting on).
+- **Injuries** extracted from the Bill of Particulars, with page citations.
+- **Everything:** the full sortable record table, for drilling past the two-minute view.
+- **New since last open:** changed items are marked, and a picker compares against any earlier date.
+- **Print/PDF export** keeps colors.
+
+### Share builder and provider view
+
+The attorney picks a provider and sees a **live preview** of exactly what that provider will receive. Categories that must never be shared (valuation, strategy, notes, other providers' bills and appointments, Medicaid lien) are locked and show the reason. Coverage limits are opt-in per share. Each share is frozen at send time, and the attorney sees when it was opened and can revoke it.
+
+The provider sees case status, an optional note from the attorney, **what we need from you** (they can reply in place), their bill on file, upcoming appointments, records on file, and dated updates. Care team and findings appear only when the attorney opts in and a HIPAA authorization is on file. A footer lists what is not shared.
+
+## How it works
+
+```
+Clio (GET only) ──> sync ──> SQLite items + change events + PDF text
+                                   │
+                                   ▼
+                   deterministic core (no AI): KPIs, action board,
+                   top-10 scoring, timeline, change diff, recovery map
+                                   │
+                                   ▼
+                   AI stages (cached per record / document version):
+                     Haiku   → coverage layers, case value, liens
+                     Sonnet  → injuries from Bill of Particulars
+                     Sonnet  → brief, why-lines, open questions
+                                   │
+                                   ▼
+                   validator drops any claim whose source ref is invalid
+                                   │
+                                   ▼
+                   digest saved, keyed by input-set hash + stage versions
+```
+
+1. Opening a brief calls `GET /api/case?matterId=…`.
+2. If a digest exists for the same input hash and stage versions, it is returned as is (no AI, $0.00).
+3. Otherwise the app syncs from Clio, rebuilds only the stages whose inputs changed, validates references, logs every AI call with tokens and USD, and saves the digest.
+4. Clicking a source chip opens the evidence drawer via `GET /api/source`. PDFs render in the browser with pdfjs-dist.
+
+### Where each panel comes from
+
+| Panel | Source |
+|---|---|
+| KPIs, action board, top-10 ranking, timeline, change diff, recovery map | Code only |
+| Coverage, case value, liens | Haiku, from custom fields and notes, with validated quotes |
+| Injuries | Sonnet, from the Bill of Particulars text layer, page-cited |
+| Brief, why-lines, open questions | Sonnet, one synthesis call |
+| Provider share | Code-built and fail-closed. AI flags can only lower an item's inclusion, never raise it. All text is templated. |
+
+### Code map
+
+| Path | Purpose |
+|---|---|
+| `src/lib/clio/` | GET-only Clio client: paging, rate limits, normalization, document download allowlist, fixture mode |
+| `src/lib/auth/` | Clio OAuth and token refresh |
+| `src/lib/ingest/` | Sync, content-hash change detection, PDF text extraction |
+| `src/lib/digest/` | Deterministic core (KPIs, actions, ranking, timeline, recovery, validator) |
+| `src/lib/ai/` | Model calls, extraction and synthesis prompts, cost accounting |
+| `src/lib/share/` | Provider-view filtering, templates, tokens, provider responses |
+| `src/lib/server/` | Request helpers, digest pipeline, share lookup |
+| `src/lib/db/` | SQLite schema and repositories |
+| `src/middleware.ts` | Network gate: non-loopback hosts can reach only the share surface |
+| `src/components/` | `home/`, `brief/`, `evidence/`, `share/`, `nav/`, `ui/` (shadcn on Base UI) |
+
+### API routes
+
+| Method and path | Purpose |
+|---|---|
+| `GET /api/auth/clio/start`, `GET /api/auth/clio/callback` | Clio OAuth flow |
+| `GET /api/matters` | Open matters from Clio |
+| `GET /api/matters/overview` | Home dashboard data (one cached Clio call, the rest from the DB) |
+| `GET /api/case?matterId=&since=` | Digest plus changes since the last open or a chosen date |
+| `POST /api/sync`, `GET /api/sync` | Start a background sync; poll its status |
+| `POST /api/digest/refresh` | Build or rebuild the digest |
+| `POST /api/view-state` | Record that the attorney opened the matter |
+| `GET /api/source` | Cached record for the evidence drawer |
+| `GET /api/documents/[id]/file` | Cached PDF, scoped to the matter |
+| `POST /api/share/draft` | Share candidates for a provider |
+| `POST /api/share/preview` | Live preview (nothing persisted) |
+| `POST /api/share`, `GET /api/share` | Create a share; list shares and views |
+| `POST /api/share/revoke` | Expire a share |
+| `GET /api/share/[token]` | Provider view (public) |
+| `POST /api/share/[token]/view`, `POST /api/share/[token]/respond` | View beacon; provider reply (public) |
+
+## Security and data
+
+- **Read-only to Clio.** The HTTP client throws on any non-GET method. The only POST to Clio is the OAuth token exchange, which does not write data.
+- **No attorney login.** The attorney app is meant for localhost. `src/middleware.ts` returns 404 for any non-loopback request except the share page, its three share API routes, and static assets. Share pages cannot be framed.
+- **Share tokens** are 32 random bytes and stored only as sha256 hashes. They expire after `SHARE_TTL_DAYS` and can be revoked. View tracking hashes IPs with `SHARE_IP_SALT`.
+- **Attorney mutations** need a JSON body and a same-origin request, and request bodies are size-capped.
+- **Document downloads** only follow hosts on an allowlist (Clio plus `CLIO_DOWNLOAD_HOSTS`).
+
+Local storage, all gitignored under `data/`:
+
+- `data/app.db` (SQLite) holds the Clio record snapshot, change events, PDF text, AI extraction cache, digests, sync runs, OAuth tokens, shares, share views and responses, view state, and the AI cost log. The schema is in `src/lib/db/schema.sql` and is created on first run.
+- `data/docs/` caches downloaded PDFs, one file per document version.
+
+## AI models and cost
+
+Measured on the Sapini matter (219 Clio records, 31 PDFs, 361 pages):
+
+| Model | Stage | Cost |
+|---|---|---|
+| `claude-haiku-4-5` | Coverage, case value, liens (3 calls) | ~$0.020 |
+| `claude-sonnet-5-5` | Injuries (1 call) | $0.047 |
+| `claude-sonnet-5-5` | Brief synthesis (1 call) | $0.080 |
+| | **First digest** | **~$0.15** |
+| | **Re-open with unchanged Clio data** | **$0.00** |
+
+Every call is logged to the `ai_calls` table. The brief shows "cached · $0.00 this open" or the build cost. See [docs/submission.md](docs/submission.md) for details.
 
 ## Scripts
 
-- `npm run dev`: Start the dev server on `127.0.0.1:3000`
-- `npm run build`: Build for production
-- `npm run typecheck`: Check TypeScript
-- `npm test`: Run tests (unit tests for digest logic, share filtering, validators)
-- `npm run digest <matterId>`: CLI to sync and digest a matter; prints cost and summary (requires `CLIO_*` and `ANTHROPIC_API_KEY` in `.env`)
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server on `127.0.0.1:3000` |
+| `npm run build` / `npm start` | Production build and server |
+| `npm test` | Vitest unit tests (digest rules, AI parsing and validation, share filtering and leak tests, API routes, middleware) |
+| `npm run typecheck` | TypeScript check |
+| `npm run lint` | ESLint |
+| `npm run digest -- <matterId> [--no-sync]` | CLI: sync and digest a matter, print the summary and cost. `--no-sync` builds from what is already in the DB. |
 
-### Example: Digest a live matter
+## Environment variables
 
-```bash
-CLIO_MATTER_ID=1234 npm run digest 1234
-```
+See `.env.example`.
 
-Output includes the computed `Digest` JSON and a cost breakdown.
-
-## Architecture
-
-```
-Frontend (Next.js App Router, TypeScript, React 19, Tailwind, shadcn/ui)
-  ├── Attorney UI (src/app/matters/[matterId]/page.tsx)
-  │   ├── Header: client info, KPI row, cache badge
-  │   ├── Brief: cited claims with source chips
-  │   ├── KPI bar: value vs. coverage waterfall
-  │   ├── Top 10: scored by recency + signal terms
-  │   ├── Action board: overdue / upcoming / waiting on
-  │   ├── Injuries: grouped by body part, BoP page refs
-  │   └── Full timeline: sortable table (depth toggle)
-  │
-  ├── Provider share (src/app/s/[token]/)
-  │   ├── Status rail: case lifecycle
-  │   ├── Coverage chip (limits optional)
-  │   ├── What we need: templated tasks for this provider
-  │   ├── Your bill: with stale flag
-  │   └── Upcoming appointments + updates
-  │
-  └── Evidence drawer (src/components/evidence/)
-      ├── Click any source chip → side panel
-      ├── Shows record text, quote highlighted
-      ├── PDFs rendered page-by-page with pdfjs-dist
-      └── "Open in Clio" link to the matter
-
-Backend (Node.js, SQLite, Claude API)
-  ├── GET-only Clio client (src/lib/clio/)
-  │   ├── Bearer token from OAuth or .env
-  │   ├── Paging + rate-limit aware
-  │   ├── Normalizes 8 record types
-  │   └── Content-hash diffing for change detection
-  │
-  ├── Data ingestion (src/lib/ingest/)
-  │   ├── Syncs matter from Clio
-  │   ├── Stores items + change events in SQLite
-  │   ├── Downloads & extracts text from PDFs
-  │   └── Tracks sync status (last run, progress)
-  │
-  ├── Deterministic digest core (src/lib/digest/)
-  │   ├── KPIs: case value, coverage, firm spend, last contact, SOL
-  │   ├── Action board: overdue, upcoming, waiting-on rules
-  │   ├── Scoring: top-10 items by signal + recency
-  │   ├── Change diff: "what's new since"
-  │   └── Validator: drops invalid source refs
-  │
-  ├── AI pipeline (src/lib/ai/)
-  │   ├── Extract facts: Haiku → coverage, value, liens
-  │   ├── Extract injuries: Sonnet → from Bill of Particulars text
-  │   ├── Synthesize: Sonnet → brief, why-lines, open questions
-  │   └── Cost log: every call tracked in DB
-  │
-  ├── Share library (src/lib/share/)
-  │   ├── Fail-closed filtering: per-provider, never leaks valuation/notes
-  │   ├── Templated needs & updates (structured text only)
-  │   ├── Tokens: 32 random bytes, sha256 at rest
-  │   ├── Provider bill stale flag
-  │   └── AI flags: can only downgrade, not raise inclusion
-  │
-  ├── API routes (src/app/api/)
-  │   ├── GET /api/matters: list open matters
-  │   ├── GET /api/case?matterId=: brief + since-last-open
-  │   ├── POST /api/sync: start background sync
-  │   ├── GET /api/sync: status + progress
-  │   ├── POST /api/digest/refresh: compute or recompute
-  │   ├── GET /api/source?drawerKey=: cached record for evidence drawer
-  │   ├── GET /api/documents/[id]/file: cached PDF (matter-scoped)
-  │   ├── POST /api/share/draft: candidates for a provider
-  │   ├── POST /api/share: create (stores snapshot)
-  │   ├── GET /api/share: history + views
-  │   ├── POST /api/share/[token]/view: view beacon
-  │   ├── POST /api/share/[token]/respond: provider reply (kind, date, note)
-  │   └── POST /api/share/revoke: expire a share
-  │
-  └── Database (src/lib/db/, src/lib/db/schema.sql)
-      ├── items: current Clio records (normalized)
-      ├── item_events: change history (new / changed / deleted)
-      ├── document_texts: per-page PDF text
-      ├── digests: cached full digests + version
-      ├── extractions: per-item AI cache
-      ├── shares: share metadata + frozen ProviderView
-      ├── share_responses: provider replies + timestamps
-      ├── view_state: "since last open" tracking
-      ├── ai_calls: cost log (model, tokens, USD)
-      └── oauth_tokens: Clio token refresh (auto-refreshed)
-
-Data flow:
-  1. User opens /matters/[matterId]
-  2. Browser fetches GET /api/case?matterId=…
-  3. API checks digests table for cached digest (same input hash)
-  4. If cached, return it; cost = $0.00 this open
-  5. If not cached:
-     - syncMatter(): fetch from Clio, store in items, write events
-     - buildDigest():
-       - computeDeterministic(): KPIs, action board, scoring (zero API)
-       - extractFacts(): Haiku → coverage/value/liens (cached)
-       - extractInjuries(): Sonnet → BoP page refs (cached)
-       - synthesize(): Sonnet → brief, why, open questions (one call)
-       - validateRefs(): drop invalid refs, count warnings
-     - Save digest, log cost
-  6. Browser renders the digest
-  7. User clicks a source chip → drawer fetches GET /api/source?drawerKey=…
-  8. Evidence drawer renders text or PDF + quote highlight
-```
-
-## How Each Panel Is Computed
-
-**Header & KPIs** (code + Clio metadata, no AI):
-- `case_value`: Attorney custom field (currency type) OR none recorded
-- `coverage`: From custom field "Insurance" (UM/UIM, BI, no-fault) parsed by Haiku; math in code
-- `firm_spend`: Sum of expense rows where `kind === 'firm'` (parsed by shape)
-- `last_client_contact`: Latest communication where client is sender/receiver; notes also count
-- `next_deadline`: Earliest open task or future calendar entry
-- `SOL`: Calculated in code; overdue only if open and past the date
-
-**Brief** (4–5 sentences, Sonnet synthesis):
-- Input: the most recent "summary/posture"-like note, plus all notes/comms mentioning coverage or value
-- Output: claims with source refs (note/email/task/document)
-- **Traceable**: Each claim is a `SourceRef`; click to open the evidence drawer
-
-**Top 10** (scored by code, "why" by Sonnet):
-- **Scoring** (deterministic, no AI): recency decay (half-life 180 days) + signal terms (limit, coverage, lien, surgery, offer, IME, posture) + dollar amounts + still-open task cross-refs
-- **Why-line** (one per item, Sonnet): "scheduled IME on 10-5" or "second surgery undated after 5 requests"
-
-**Action Board** (code only):
-- **Overdue**: Open task with `dueAt < now`
-- **Upcoming**: Open task or calendar entry within 30 days
-- **Waiting on**: Task assigned to a contact or matching their name, with outbound comms to that contact and no reply; counts requests and days silent
-- **Suggested**: (Not implemented; reserved for future AI)
-
-**Injuries** (Sonnet, sourced from Bill of Particulars only):
-- Choose document generically: name/folder matching "bill of particulars" / "pleading" / "complaint", else fallback
-- Extract per-page: name, body part, status, first documented date
-- **Traceable**: Page refs; click to open PDF at that page with the quote highlighted
-
-**Provider View** (fail-closed, zero secrets leaked):
-- **Never includes**: Note text, case strategy, valuation, other providers' bills, Medicaid lien, case value
-- **Includes**: Status, stage, this provider's own bill + stale flag, their tasks (templated), coverage limits (if attorney opts in), upcoming treatment calendar
-- **View snapshot**: Frozen at send time; attorney can revoke or toggle visibility before sending
-- **Templated text only**: AI can suggest needs (Haiku) but only via templates; keywords downgrade inclusion
-
-**Cached digest**:
-- Keyed by `inputSetHash` (sha256 of sorted record content hashes)
-- Unchanged hash → zero AI calls, $0.00 cost
-- Second open on the same matter = instant load
-
-## Data Storage
-
-- **SQLite database**: `./data/app.db` (created on first run)
-  - Contains: Clio records snapshot, change history, cached digests, AI cost log, OAuth tokens, share metadata
-  - Never contains: raw Clio API tokens (those are encrypted in memory only)
-  
-- **PDFs**: `./data/docs/<clioId>-<versionUuid>.pdf` (cached from Clio)
-  - Downloaded once per version, never fetched again
-  - Served via `GET /api/documents/[id]/file` (matter-scoped; no path traversal)
-
-- **Fixtures** (dev/test only): `fixtures/clio/*.json`, `fixtures/documents/`, `fixtures/sample-digest.json`
-  - Synthetic client "Jane Doe", no real case data
-  - Used when `CLIO_FIXTURE_DIR` is set
-
-## Read-Only Guarantee
-
-Every API client has a guard: **only GET requests are allowed to Clio**. Any non-GET method throws immediately. Persistence (shares, cache, view tracking) goes to our SQLite database, never back to Clio.
-
-```typescript
-// GET-only client (src/lib/clio/index.ts)
-if (method !== 'GET') throw new Error(`Only GET allowed; got ${method}`);
-```
-
-## Known Limitations
-
-- **No attorney login**: The app runs on `localhost:3000` (single user); OAuth is for Clio token refresh only.
-- **No push/email alerts**: Providers see changes when they next visit their share link (no webhooks).
-- **Scanned pages not OCR'd**: Injuries come from text-layer PDFs (Bill of Particulars); the other 15 scanned pages are not indexed.
-- **Clio per-record deep links not used**: The in-app evidence drawer is the source of truth; Clio per-record URLs are optional.
-- **No dev-only routes**: the fixture preview pages used during the build were removed; runtime code never imports `fixtures/`.
-
-## Development
-
-### Run tests
-
-```bash
-npm test
-```
-
-Tests cover:
-- Digest logic: KPIs, action board, scoring, change diff, validator
-- Share filtering: no valuation/strategy/bills leak to providers
-- API routes: error handling, 404 for bad tokens, sync status
-
-### TypeScript
-
-```bash
-npm run typecheck
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and fill in:
-
-| Variable | Purpose | Example |
+| Variable | Purpose | Default / example |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Claude API key | `sk-ant-…` |
-| `CLIO_BASE_URL` | Clio domain | `https://app.clio.com` |
-| `CLIO_ACCESS_TOKEN` | API token (fallback) | `oauth2:…` |
-| `CLIO_REFRESH_TOKEN` | OAuth refresh (optional) | `…` |
-| `CLIO_CLIENT_ID` | OAuth client ID | `…` |
-| `CLIO_CLIENT_SECRET` | OAuth secret (never in `.env`, env var only) | `…` |
-| `CLIO_FIXTURE_DIR` | Dev: read from fixtures | `fixtures/clio` |
+| `CLIO_BASE_URL` | Clio region URL | `https://app.clio.com` |
+| `CLIO_CLIENT_ID`, `CLIO_CLIENT_SECRET` | Clio OAuth app | |
+| `CLIO_REDIRECT_URI` | OAuth callback | `http://127.0.0.1:3000/api/auth/clio/callback` |
+| `CLIO_ACCESS_TOKEN`, `CLIO_REFRESH_TOKEN` | Token fallback when OAuth is not used | |
+| `CLIO_MATTER_ID` | Default matter for `npm run digest` | |
+| `CLIO_DOWNLOAD_HOSTS` | Extra allowed document download hosts (comma-separated) | |
+| `CLIO_FIXTURE_DIR` | Read from fixtures instead of Clio | `fixtures/clio` |
 | `DATABASE_PATH` | SQLite file | `./data/app.db` |
-| `APP_BASE_URL` | For share links | `http://127.0.0.1:3000` |
+| `APP_BASE_URL` | Base URL for share links | `http://127.0.0.1:3000` |
 | `SHARE_TTL_DAYS` | Share expiry | `7` |
-| `SHARE_IP_SALT` | Random salt for view hashing | (random, set once) |
-| `FIRM_NAME` | Shown to providers | `Swans Law` |
-| `MODEL_EXTRACT` | Haiku model | `claude-haiku-4-5` |
-| `MODEL_SYNTH` | Sonnet model | `claude-sonnet-5-5` |
-| `MODEL_SCAN` | Sonnet model (injuries) | `claude-sonnet-5-5` |
+| `SHARE_IP_SALT` | Salt for hashing viewer IPs (set once, random) | |
+| `FIRM_NAME` | Shown on the home page and to providers | |
+| `MODEL_EXTRACT` | Fact extraction model | `claude-haiku-4-5` |
+| `MODEL_SYNTH` | Brief synthesis model | `claude-sonnet-5-5` |
+| `MODEL_SCAN` | Injury extraction model | `claude-sonnet-5-5` |
 
-## Tech Stack
+## Known limitations
 
-- **Framework**: Next.js 15 (App Router, React 19, TypeScript)
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Database**: SQLite via better-sqlite3 (no migrations; `CREATE TABLE IF NOT EXISTS`)
-- **PDF**: pdfjs-dist (text extraction + rendering)
-- **AI**: Anthropic Claude API (structured output, token counting)
-- **Testing**: Vitest
-- **Build**: Next.js compiler + ESLint
+- **Single user, localhost only.** There is no attorney login. OAuth only connects to Clio.
+- **No notifications.** Providers see updates the next time they open their link. Nothing is emailed.
+- **No OCR.** Injuries come from the text-layer Bill of Particulars. Scanned PDFs are stored but not indexed.
+- **The AI-suggested action lane is empty.** The UI slot exists, but no suggestions are generated yet.
+- **Recovery map assumptions.** The 33⅓% fee and the "rule of thirds" client target are editable defaults (`src/lib/digest/recovery.ts`). The payout order is illustrative, not a distribution statement.
+- **No Clio per-record links.** The in-app evidence drawer is the source view, plus one "Open in Clio" link to the matter.
+
+## Tech stack
+
+Next.js 15 (App Router, Node runtime), React 19, TypeScript, Tailwind CSS 4, shadcn/ui on Base UI, SQLite (better-sqlite3), pdfjs-dist, zod, Anthropic SDK, Vitest.
 
 ## License
 
-Proprietary; built for the Swans Applied AI Hackathon.
+Proprietary. Built for the Swans Applied AI Hackathon.
