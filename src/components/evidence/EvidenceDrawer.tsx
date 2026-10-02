@@ -8,7 +8,7 @@ import { splitByQuote } from "./highlight";
 import { PdfViewer } from "./PdfViewer";
 import { SOURCE_LABEL } from "./meta";
 
-type SourcePayload = { record: ClioRecord; documentText?: { pages: string[] } };
+type SourcePayload = { record: ClioRecord; documentText?: { page: number; pageCount: number; text: string } };
 
 export function EvidenceDrawer({ sourceRef, onClose }: { sourceRef: SourceRef | null; onClose: () => void }) {
   const [data, setData] = useState<SourcePayload | null>(null);
@@ -54,9 +54,9 @@ export function EvidenceDrawer({ sourceRef, onClose }: { sourceRef: SourceRef | 
             {!data && !error && <p className="text-sm text-muted-foreground">Loading source...</p>}
 
             {rec && isDoc && <PdfViewer url={`/api/documents/${encodeURIComponent(rec.clioId)}/file`} page={page} quote={sourceRef.quote} />}
-            {rec && isDoc && data?.documentText?.pages?.[page - 1] && (
+            {rec && isDoc && data?.documentText?.text && (
               <details className="text-xs"><summary className="cursor-pointer text-muted-foreground">Extracted text, page {page}</summary>
-                <BodyText text={data.documentText.pages[page - 1]} quote={sourceRef.quote} />
+                <BodyText text={data.documentText.text} quote={sourceRef.quote} />
               </details>
             )}
             {rec && !isDoc && (rec.bodyText

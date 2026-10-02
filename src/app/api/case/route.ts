@@ -29,6 +29,7 @@ export async function GET(req: Request): Promise<Response> {
   if (since) {
     if (Number.isNaN(Date.parse(since))) return errorJson(400, "since must be an ISO date");
     body.diffSince = diffSince(records, since);
+    body.sinceLastOpen = body.diffSince; // the brief's "Compare since" reads sinceLastOpen
   }
   return withViewerCookie(json(body), viewer);
 }
