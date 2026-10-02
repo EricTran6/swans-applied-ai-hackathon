@@ -29,8 +29,7 @@ const req = (cookie?: string) => new Request("http://127.0.0.1:3000/api/matters/
 const VIEWER = "viewer-abcdefghijklmnop";
 
 function insertDigest(d: Digest) {
-  const { version: _v, ...rest } = d;
-  repos().digests.insert(rest, "v1", d.meta.costUsd);
+  repos().digests.insert(d, "v1", d.meta.costUsd); // insert assigns the version
 }
 
 beforeEach(() => {
