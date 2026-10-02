@@ -5,9 +5,9 @@ import type {
 } from "@/lib/types";
 import { validateRefs } from "@/lib/digest";
 import { callJson, models, LLM_REF_SCHEMA } from "./client";
-import { byDateDesc, quoteContainsNumber, recordBlock } from "./common";
+import { byDateDesc, normName, quoteContainsNumber, recordBlock } from "./common";
 
-export const FACTS_EXTRACTOR_VERSION = "facts-v2";
+export const FACTS_EXTRACTOR_VERSION = "facts-v3";
 
 // Which free-text records are worth a look. Generic PI vocabulary, not case data.
 const FACT_KEYWORDS =
@@ -65,6 +65,7 @@ Each input record starts with "[id]". For every fact you find, emit one item:
 - coverage.exhausted = true when the text says that layer's benefits are exhausted/used up (emit it even if no number is stated); otherwise null.
 - coverage.selfInsured = true when the text says the party is self-insured / has no carrier (emit it even if no number is stated); otherwise null.
 - Emit one coverage item per layer per record, including when a record restates limits already seen elsewhere.
+- coverage_confirmed: emit confirmed=true when the record says the limits were confirmed in writing (e.g. by the adjuster or carrier); confirmed=false when it says the limits are unconfirmed or unknown. The quote must contain the confirming words.
 - ref.id is the exact "[id]" the fact comes from. ref.quote is a VERBATIM substring of that record's text that contains the number (and the carrier/holder when stated). Never paraphrase inside quote.
 - date: the business date of the record if visible, else null.
 Do not compute, sum or infer numbers. Skip anything not supported by a verbatim quote. Omit facts you are unsure about.`;
@@ -89,6 +90,9 @@ function cacheKey(r: ClioRecord) {
 
 function isRawFactArray(v: unknown): v is RawFact[] { return Array.isArray(v); }
 
+/** Models sometimes echo the "[id]" brackets or pad with spaces. */
+export function normalizeId(id: string): string { return id.trim().replace(/^\[\s*|\s*\]$/g, ""); }
+
 function customFieldText(cf: CustomFieldValue): string {
   return `[${cf.drawerKey}] custom field "${cf.name}": ${cf.display || String(cf.value ?? "")}`;
 }
@@ -106,7 +110,8 @@ export async function extractFactsDetailed(i: {
   }
 
   // Batch uncached records (cheap Haiku calls), then split results back per record for the cache.
-  const BATCH_CHARS = 40_000;
+  // Small batches keep Haiku's recall high on long files (cheap: ~2-3k tokens each).
+  const BATCH_CHARS = 12_000;
   const batches: ClioRecord[][] = [];
   let cur: ClioRecord[] = []; let curLen = 0;
   for (const r of uncached) {
@@ -125,11 +130,16 @@ export async function extractFactsDetailed(i: {
     if (!res.data) { if (res.warning) warnings.push(res.warning); continue; }
     const byId = new Map<string, RawFact[]>();
     for (const r of batch) byId.set(r.drawerKey, []);
+    let unknown = 0;
     for (const f of res.data.facts ?? []) {
-      const list = byId.get(f?.ref?.id);
-      if (list) { list.push(f); raw.push(f); }
+      if (!f?.ref || typeof f.ref.id !== "string") { unknown++; continue; }
+      const fixed: RawFact = { ...f, ref: { ...f.ref, id: normalizeId(f.ref.id) } };
+      const list = byId.get(fixed.ref.id);
+      if (list) { list.push(fixed); raw.push(fixed); } else unknown++;
     }
-    for (const r of batch) i.cache.set(cacheKey(r), byId.get(r.drawerKey) ?? []);
+    if (unknown) warnings.push(`extract_facts: ${unknown} fact(s) cited an id outside the batch and were skipped`);
+    // Only cache a batch whose output mapped cleanly, so a bad response is retried next build.
+    if (!unknown) for (const r of batch) i.cache.set(cacheKey(r), byId.get(r.drawerKey) ?? []);
   }
 
   const merged = mergeFacts(raw, i.records);
@@ -194,13 +204,18 @@ export function mergeFacts(raw: RawFact[], records: ClioRecord[]): { facts: Extr
     const refs = [w.ref, ...exhaustedBy.filter((h) => h !== w).slice(0, 1).map((h) => h.ref)];
     coverage.push({ kind, perPerson, perAccident, carrier, ...(exhaustedBy.length ? { exhausted: true } : {}), refs });
     // Older sources disagree when they state different limits, or self-insurance against a stated limit.
-    const differing = numeric.slice(1).filter((h) => (h.fact.perPerson ?? h.fact.amount) !== perPerson || h.fact.perAccident !== perAccident);
-    const selfInsured = perPerson !== null ? all.filter((h) => h.fact.selfInsured === true && h !== w) : [];
+    // A source that omits the per-accident figure does not contradict one that states it.
+    const differing = numeric.slice(1).filter((h) => (h.fact.perPerson ?? h.fact.amount) !== perPerson
+      || (h.fact.perAccident !== null && perAccident !== null && h.fact.perAccident !== perAccident));
+    const selfInsured = perPerson !== null
+      ? all.filter((h) => h.fact.selfInsured === true && (h.fact.perPerson ?? h.fact.amount) === null) : [];
     const against = [...differing, ...selfInsured].sort(sortLatest);
     if (against.length) conflicts.push({ field: "coverage", refs: [w.ref, ...against.map((h) => h.ref)] });
   }
 
-  const cc = ok.filter((h) => h.fact.kind === "coverage_confirmed" && h.fact.confirmed !== null).sort(sortLatest);
+  // Models often flag confirmation on the coverage item itself; both forms count.
+  const cc = ok.filter((h) => (h.fact.kind === "coverage_confirmed" || (h.fact.kind === "coverage" && h.fact.coverageKind === "BI"))
+    && typeof h.fact.confirmed === "boolean").sort(sortLatest);
   const coverageConfirmed: ExtractedFacts["coverageConfirmed"] = cc.length
     ? { confirmed: cc[0].fact.confirmed as boolean, on: cc[0].ref.sourceDate ?? cc[0].fact.date, ref: cc[0].ref } : null;
 
@@ -208,7 +223,7 @@ export function mergeFacts(raw: RawFact[], records: ClioRecord[]): { facts: Extr
   const liens: ExtractedFacts["liens"] = [];
   const byHolder = new Map<string, Hydrated[]>();
   for (const h of ok.filter((h) => h.fact.kind === "lien")) {
-    const key = (h.fact.holder ?? "unknown").trim().toLowerCase();
+    const key = holderKey(h.fact.holder, [...byHolder.keys()]);
     byHolder.set(key, [...(byHolder.get(key) ?? []), h]);
   }
   for (const list of byHolder.values()) {
@@ -226,6 +241,21 @@ export function mergeFacts(raw: RawFact[], records: ClioRecord[]): { facts: Extr
   }
 
   return { facts: { caseValue, coverage, coverageConfirmed, liens, conflicts }, droppedRefs };
+}
+
+const HOLDER_STOP = new Set(["the", "of", "state", "new", "york", "dept", "department", "inc", "llc", "program", "plan"]);
+const holderTokens = (s: string) => normName(s).split(" ").filter((t) => t && !HOLDER_STOP.has(t));
+/** Same lien holder written two ways ("Medicaid" vs "State Medicaid program") maps to one key. */
+export function holderKey(holder: string | null, existing: string[]): string {
+  const key = normName(holder ?? "unknown") || "unknown";
+  const mine = holderTokens(key);
+  const match = existing.find((k) => {
+    const theirs = holderTokens(k);
+    if (!mine.length || !theirs.length) return k === key;
+    const [small, big] = mine.length <= theirs.length ? [mine, theirs] : [theirs, mine];
+    return small.every((t) => big.includes(t));
+  });
+  return match ?? key;
 }
 
 function displayValue(f: RawFact): string {

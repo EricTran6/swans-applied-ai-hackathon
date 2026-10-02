@@ -94,6 +94,28 @@ describe("mergeFacts", () => {
     expect(r.droppedRefs).toBe(1);
   });
 
+  it("treats confirmed=true on a BI coverage item as written confirmation", () => {
+    const r = mergeFacts([fact({ kind: "coverage", coverageKind: "BI", perPerson: 250000, perAccident: 500000, confirmed: true,
+      ref: { id: "note:2", quote: "confirmed in writing: liability limits $250,000/$500,000" } })], records);
+    expect(r.facts.coverageConfirmed).toMatchObject({ confirmed: true, on: "2026-09-05" });
+  });
+
+  it("does not flag a source that omits the per-accident figure as a conflict", () => {
+    const r = mergeFacts([
+      fact({ kind: "coverage", coverageKind: "BI", perPerson: 250000, perAccident: 500000, ref: { id: "note:2", quote: "$250,000/$500,000" } }),
+      fact({ kind: "coverage", coverageKind: "BI", perPerson: 250000, ref: { id: "note:2", quote: "$250,000" } }),
+    ], records);
+    expect(r.facts.conflicts).toEqual([]);
+  });
+
+  it("merges the same lien holder written two ways", () => {
+    const r = mergeFacts([
+      fact({ kind: "lien", amount: 9400, holder: "Medicaid", ref: { id: "note:3", quote: "lien of $9,400" } }),
+      fact({ kind: "lien", amount: 9400, holder: "State Medicaid Program", ref: { id: "note:3", quote: "lien of $9,400" } }),
+    ], records);
+    expect(r.facts.liens).toHaveLength(1);
+  });
+
   it("attorney custom field beats a quoted note for case value", () => {
     const r = mergeFacts([
       fact({ kind: "case_value", amount: 500000, date: "2026-09-30", ref: { id: "note:2", quote: "$250,000" } }), // number mismatch -> dropped
@@ -135,6 +157,26 @@ describe("extractFactsDetailed", () => {
     const r2 = await extractFactsDetailed({ matter, records, cache, log });
     expect(createMock).toHaveBeenCalledTimes(1);
     expect(r2.facts.liens).toHaveLength(1);
+  });
+
+  it("accepts ids echoed with brackets", async () => {
+    createMock.mockResolvedValueOnce(sdkJson({ facts: [
+      { kind: "lien", amount: 9400, perPerson: null, perAccident: null, coverageKind: null, carrier: null, holder: "State program", confirmed: null, exhausted: null, selfInsured: null, date: null, ref: { id: "[note:3]", quote: "lien of $9,400" } },
+    ] }));
+    const r = await extractFactsDetailed({ matter, records, cache: new MemoryCache(), log: () => {} });
+    expect(r.facts.liens).toHaveLength(1);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("warns and does not cache when a fact cites an unknown id", async () => {
+    createMock.mockResolvedValue(sdkJson({ facts: [
+      { kind: "lien", amount: 1, perPerson: null, perAccident: null, coverageKind: null, carrier: null, holder: "X", confirmed: null, exhausted: null, selfInsured: null, date: null, ref: { id: "note:404", quote: "$1" } },
+    ] }));
+    const cache = new MemoryCache();
+    const r = await extractFactsDetailed({ matter, records, cache, log: () => {} });
+    expect(r.warnings[0]).toMatch(/outside the batch/);
+    await extractFactsDetailed({ matter, records, cache, log: () => {} });
+    expect(createMock.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
   it("degrades to empty facts with a warning when the model refuses twice", async () => {
