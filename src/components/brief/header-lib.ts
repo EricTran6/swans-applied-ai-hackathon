@@ -73,19 +73,27 @@ export function footerLine(
   return parts.join(" · ");
 }
 
-/** Coverage cap for the range bar: explicit range cap, then the coverage KPI, then the BI layer, then the largest live layer. */
+/**
+ * Coverage cap for the range bar.
+ * Precedence:
+ * 1. Explicit range cap
+ * 2. Coverage KPI value
+ * 3. Sum of non-exhausted liability layers: BI + Umbrella (each uses perPerson, falling back to perAccident)
+ * 4. null (UI displays "cap unknown")
+ */
 export function resolveCap(
   rangeCap: number | null | undefined,
   coverageValue: number | null | undefined,
-  layers: { kind: string; perPerson: number | null; exhausted?: boolean }[],
+  layers: { kind: string; perPerson: number | null; perAccident?: number | null; exhausted?: boolean }[],
 ): number | null {
   const ok = (n: number | null | undefined): n is number => n != null && Number.isFinite(n) && n > 0;
   if (ok(rangeCap)) return rangeCap;
   if (ok(coverageValue)) return coverageValue;
-  const bi = layers.find((l) => l.kind === "BI" && ok(l.perPerson));
-  if (bi) return bi.perPerson;
-  const live = layers.filter((l) => !l.exhausted && ok(l.perPerson)).map((l) => l.perPerson as number);
-  return live.length ? Math.max(...live) : null;
+  // Liability tower only: never UM/UIM, PIP, MedPay or liens.
+  const sum = layers
+    .filter((l) => (l.kind === "BI" || l.kind === "Umbrella") && !l.exhausted)
+    .reduce((s, l) => s + (ok(l.perPerson) ? l.perPerson : ok(l.perAccident) ? l.perAccident : 0), 0);
+  return sum > 0 ? sum : null;
 }
 
 // ---------- coverage bar ----------

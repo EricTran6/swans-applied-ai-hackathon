@@ -52,12 +52,65 @@ describe("footer + coverage", () => {
     expect(uniqueModels({ a: "claude-x", b: "claude-x", c: "claude-y" })).toEqual(["claude-x", "claude-y"]);
     expect(footerLine({ version: 3, meta: { builtAt: "2026-01-10", models: { a: "m", b: "m" }, droppedRefs: 0 } }, (d) => d)).toBe("Pipeline v3 · built 2026-01-10 · m");
   });
-  it("resolves the cap with fallbacks", () => {
+  it("respects rangeCap precedence", () => {
     expect(resolveCap(100, 200, [])).toBe(100);
+  });
+  it("respects coverageValue precedence over layers", () => {
     expect(resolveCap(null, 200, [])).toBe(200);
-    expect(resolveCap(null, null, [{ kind: "Other", perPerson: 5 }, { kind: "BI", perPerson: 50 }])).toBe(50);
-    expect(resolveCap(null, null, [{ kind: "Other", perPerson: 5 }, { kind: "Umbrella", perPerson: 9 }, { kind: "MedPay", perPerson: 99, exhausted: true }])).toBe(9);
-    expect(resolveCap(null, null, [])).toBeNull();
+  });
+  it("returns null when only non-liability layers are present", () => {
+    // Health/Lien + MedPay only (non-liability)
+    expect(
+      resolveCap(null, null, [
+        { kind: "Health/Lien", perPerson: 480000, perAccident: null },
+        { kind: "MedPay", perPerson: 5000, perAccident: null },
+      ]),
+    ).toBeNull();
+  });
+  it("returns null when only non-liability coverage types present", () => {
+    // UM/UIM and No-fault/PIP only (not BI or Umbrella)
+    expect(
+      resolveCap(null, null, [
+        { kind: "UM/UIM", perPerson: 100000, perAccident: null },
+        { kind: "No-fault/PIP", perPerson: 50000, perAccident: null },
+      ]),
+    ).toBeNull();
+  });
+  it("sums BI and Umbrella layers from the liability tower", () => {
+    // BI 250000 + Umbrella 1000000 → 1250000
+    expect(
+      resolveCap(null, null, [
+        { kind: "BI", perPerson: 250000, perAccident: null },
+        { kind: "Umbrella", perPerson: 1000000, perAccident: null },
+      ]),
+    ).toBe(1250000);
+  });
+  it("excludes exhausted BI from the sum", () => {
+    // Exhausted BI 250000 + live Umbrella 1000000 → 1000000
+    expect(
+      resolveCap(null, null, [
+        { kind: "BI", perPerson: 250000, perAccident: null, exhausted: true },
+        { kind: "Umbrella", perPerson: 1000000, perAccident: null },
+      ]),
+    ).toBe(1000000);
+  });
+  it("falls back to perAccident when perPerson is null", () => {
+    // BI perPerson null, perAccident 500000 → 500000
+    expect(
+      resolveCap(null, null, [
+        { kind: "BI", perPerson: null, perAccident: 500000 },
+      ]),
+    ).toBe(500000);
+  });
+  it("ignores other layers when computing liability sum", () => {
+    // BI 200000 + Umbrella 500000 + MedPay 10000 → 700000 (MedPay ignored)
+    expect(
+      resolveCap(null, null, [
+        { kind: "BI", perPerson: 200000, perAccident: null },
+        { kind: "MedPay", perPerson: 10000, perAccident: null },
+        { kind: "Umbrella", perPerson: 500000, perAccident: null },
+      ]),
+    ).toBe(700000);
   });
   it("labels unknown cap", () => {
     expect(coverageBarCaption(null)).toBe("cap unknown");

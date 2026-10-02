@@ -292,8 +292,8 @@ export function stripLayout(
   const lo = dated[0]!.ms;
   let hi = dated[dated.length - 1]!.ms;
   const { now } = opts;
-  const showToday = now != null && now > hi && now - hi < 2 * 365 * DAY_MS;
-  if (showToday) hi = now!;
+  const showToday = now != null && now >= lo && (now <= hi || now - hi < 2 * 365 * DAY_MS);
+  if (showToday && now! > hi) hi = now!;
   const scale = compressedScale(dated.map((d) => d.ms).concat(showToday ? [now!] : []), { width, pad, gapDays: opts.gapDays, maxGapFrac: opts.maxGapFrac });
   const clusters = clusterDots(dated.map((d) => ({ event: d.e, x: scale.xOf(d.ms) })), clusterPx);
 

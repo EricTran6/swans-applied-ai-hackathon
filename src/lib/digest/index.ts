@@ -16,9 +16,9 @@ export { SIGNAL_TERMS, scoreRecords } from "./rank";
 export { STAGE_LABELS } from "./stage";
 
 /** Bump when timeline, ranking or action-board rules change, so cached digests are rebuilt. */
-export const DIGEST_CORE_VERSION = "core-v2";
+export const DIGEST_CORE_VERSION = "core-v3";
 
-export type DeterministicDigest =Omit<Digest, "version" | "brief" | "openQuestions" | "injuries" | "meta" | "inputSetHash" | "createdAt">;
+export type DeterministicDigest = Omit<Digest, "version" | "brief" | "openQuestions" | "injuries" | "meta" | "inputSetHash" | "createdAt">;
 
 const KPI_ORDER = ["case_value", "coverage", "specials", "firm_spend", "last_client_contact", "next_deadline"];
 

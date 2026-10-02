@@ -201,6 +201,36 @@ describe("stripLayout", () => {
     expect(l.today!.x).toBe(950);
     expect(l.clusters[1]!.x).toBeLessThan(950);
   });
+  describe("today marker", () => {
+    const now = Date.parse("2026-10-02T00:00:00Z");
+    it("shows today between past and future milestones", () => {
+      const l = stripLayout([ev("a", "2025-01-01"), ev("b", "2026-09-01"), ev("c", "2026-11-15")], { width: 1000, pad: 50, now });
+      expect(l.today).not.toBeNull();
+      const past = l.clusters.find((c) => c.events[0]!.id === "b")!;
+      const future = l.clusters.find((c) => c.events[0]!.id === "c")!;
+      expect(l.today!.x).toBeGreaterThan(past.x);
+      expect(l.today!.x).toBeLessThan(future.x);
+    });
+    it("shows today at the right end when after all milestones", () => {
+      const l = stripLayout([ev("a", "2026-06-01"), ev("b", "2026-08-01")], { width: 1000, pad: 50, now });
+      expect(l.today!.x).toBe(950);
+    });
+    it("hides today when before the first milestone or no now given", () => {
+      const evs = [ev("a", "2026-11-01"), ev("b", "2026-12-01")];
+      expect(stripLayout(evs, { width: 1000, pad: 50, now }).today).toBeNull();
+      expect(stripLayout(evs, { width: 1000, pad: 50 }).today).toBeNull();
+    });
+    it("never lets a cluster label cover the today label", () => {
+      const l = stripLayout([ev("a", "2026-09-28"), ev("b", "2026-09-30"), ev("c", "2026-10-04"), ev("d", "2026-10-06"), ev("e", "2025-01-01")], { width: 600, pad: 40, now });
+      const t = l.today!.box!;
+      expect(t).not.toBeNull();
+      for (const c of l.clusters) {
+        if (c.label && c.label.side === t.side && c.label.row === t.row) {
+          expect(c.label.right <= t.left || t.right <= c.label.left).toBe(true);
+        }
+      }
+    });
+  });
   it("handles empty and single events", () => {
     expect(stripLayout([], { width: 500 }).clusters).toEqual([]);
     const one = stripLayout([ev("a", "2024-01-01")], { width: 500, pad: 20 });

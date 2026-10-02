@@ -66,6 +66,47 @@ describe("milestones", () => {
     expect(t.find((e) => e.refs[0].clioId === a.clioId)!.milestone).toBe(true);
     expect(t.find((e) => e.refs[0].clioId === b.clioId)!.milestone).toBe(false);
   });
+  it("status and decision notes are not surgery milestones; a recommendation or performed surgery is", () => {
+    const { matter, records } = fx();
+    const status = [
+      note(records, "Knee surgery still has no date", "2022-02-01"),
+      note(records, "The second surgery is now the biggest open question", "2022-03-01"),
+      cal(records, "Client appointment: treatment and surgery decision", "2022-04-01"),
+    ];
+    const real = [note(records, "Hip surgery recommended", "2022-06-01"), note(records, "Post-operative: shoulder arthroscopy performed", "2022-09-01")];
+    const t = buildTimeline(matter, [...records, ...status, ...real]);
+    const on = (rs: ClioRecord[]) => t.filter((e) => rs.some((r) => r.clioId === e.refs[0].clioId));
+    expect(on(status).some((e) => e.milestone)).toBe(false);
+    expect(on(real).every((e) => e.milestone)).toBe(true);
+  });
+  it("a collapse window keeps the calendar entry (the event) over an earlier authorisation note", () => {
+    const { matter, records } = fx();
+    const auth = note(records, "Shoulder surgery authorised", "2022-05-01");
+    const done = cal(records, "Shoulder arthroscopy, Example Surgery Center", "2022-05-15");
+    const t = buildTimeline(matter, [...records, auth, done]);
+    expect(t.find((e) => e.refs[0].clioId === done.clioId)!.milestone).toBe(true);
+    expect(t.find((e) => e.refs[0].clioId === auth.clioId)!.milestone).toBe(false);
+  });
+  it("preferring the event does not chain: surgeries far apart both stay", () => {
+    const { matter, records } = fx();
+    const a = note(records, "Shoulder surgery authorised", "2022-05-01");
+    const b = cal(records, "Shoulder arthroscopy", "2022-05-10");
+    const c = note(records, "Second surgery recommended", "2022-06-05");
+    const d = cal(records, "Knee arthroscopy", "2022-08-01");
+    const t = buildTimeline(matter, [...records, a, b, c, d]);
+    const ms = (r: ClioRecord) => t.find((e) => e.refs[0].clioId === r.clioId)!.milestone;
+    expect([ms(a), ms(b), ms(c), ms(d)]).toEqual([false, true, true, true]);
+  });
+  it("retention may come from a communication (once), no other kind may", () => {
+    const { matter, records } = fx();
+    const ortho = pick<Contact>(records, "contact:810002");
+    const r1 = comm(records, "Retainer agreement and HIPAA authorization", "2000-01-05", [FIRM], [partyOf(ortho)]);
+    const r2 = comm(records, "Signed retainer returned", "2000-01-09", [partyOf(ortho)], [FIRM]);
+    const noConsult = records.filter((r) => !/consult/i.test(r.title)); // the fixture's own retention entry
+    const t = buildTimeline(matter, [...noConsult, r1, r2]);
+    const ms = (r: ClioRecord) => t.find((e) => e.refs[0].clioId === r.clioId)!.milestone;
+    expect([ms(r1), ms(r2)]).toEqual([true, false]);
+  });
   it("caps milestones at 12, keeping the highest-priority kinds", () => {
     const { matter, records } = fx();
     const many = Array.from({ length: 30 }, (_, i) => cal(records, "Compliance conference", addDays("2024-01-01", i * 30)));
