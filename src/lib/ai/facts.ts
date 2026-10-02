@@ -250,7 +250,7 @@ export function mergeFacts(raw: RawFact[], records: ClioRecord[]): { facts: Extr
   return { facts: { caseValue, coverage, coverageConfirmed, liens, conflicts }, droppedRefs };
 }
 
-const HOLDER_STOP = new Set(["the", "of", "state", "new", "york", "dept", "department", "inc", "llc", "program", "plan"]);
+const HOLDER_STOP = new Set(["the", "of", "state", "dept", "department", "inc", "llc", "program", "plan"]);
 const holderTokens = (s: string) => normName(s).split(" ").filter((t) => t && !HOLDER_STOP.has(t));
 /** Same lien holder written two ways ("Medicaid" vs "State Medicaid program") maps to one key. */
 export function holderKey(holder: string | null, existing: string[]): string {
