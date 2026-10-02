@@ -26,7 +26,7 @@ Repo: `github.com/EricTran6/swans-applied-ai-hackathon`, base `main`. Hard stop:
 > 2. No hardcoded case data in `src/` or `scripts/`. That means no client or provider names, matter ids, amounts or dates from the real case. The examples in your brief describe what the live matter showed; turn each one into a generic rule and test it with the synthetic `fixtures/` ("Jane Doe").
 > 3. You have no `.env`, no Clio access and no API key. Mock the Anthropic SDK and Clio in tests.
 > 4. Edit ONLY your owned paths. Do not edit `package.json`, the lockfile, `tsconfig.json`, `next.config.ts`, `src/lib/types.ts` or `src/components/ui/**`. If you need a type or contract change, stop and report it.
-> Workflow: `npm ci`; tests first for logic (RED → GREEN); UI is checked on its `/dev/*` page; self-review as the listed reviewers. At most 3 fix iterations on a failing verify, then report the blocker.
+> Workflow: `npm ci`; tests first for logic (RED → GREEN); UI is verified by unit tests on pure helpers (layout math, aggregation, formatting) plus `npm run build`. Do **not** create `src/app/dev/**`: dev preview routes were removed before submission. The lead checks visuals locally in R6. self-review as the listed reviewers. At most 3 fix iterations on a failing verify, then report the blocker.
 > Done = your Verify commands pass, work is committed on `task/<id>-<slug>` and pushed (`git push -u origin task/<id>-<slug>`). Never push to `main`. Use conventional commit messages.
 > Final report, 10 lines max: branch, verify status, files touched, contract changes needed, blockers.
 
@@ -36,11 +36,11 @@ Repo: `github.com/EricTran6/swans-applied-ai-hackathon`, base `main`. Hard stop:
 |---|---|---|---|---|
 | R1 | Digest logic quality | opus | ranking, threading and waiting-on rules; judged on correctness | `src/lib/digest/**` |
 | R2 | Brief header, KPIs, banners, design tokens | sonnet | UI fixes with a clear spec | `src/components/brief/{Header,KpiRow,BriefView,BriefPanels,primitives}.tsx`, new `src/components/brief/header-lib.ts`, `src/app/globals.css` |
-| R3 | Story strip and list layout | sonnet | layout math plus UI | `src/components/brief/{StoryStrip,TopTenAndActions,InjuriesAndTable}.tsx`, `src/components/brief/lib.ts` (+ its test), `src/app/dev/brief/**` |
-| R4 | Share builder: real preview, less noise | opus | demo centerpiece for audience 2; new route | `src/components/share/builder/**`, `src/app/matters/[matterId]/share/**`, new `src/app/api/share/preview/route.ts` (+ test), `src/app/dev/share-builder/**` |
+| R3 | Story strip and list layout | sonnet | layout math plus UI | `src/components/brief/{StoryStrip,TopTenAndActions,InjuriesAndTable}.tsx`, `src/components/brief/lib.ts` (+ its test) |
+| R4 | Share builder: real preview, less noise | opus | demo centerpiece for audience 2; new route | `src/components/share/builder/**`, `src/app/matters/[matterId]/share/**`, new `src/app/api/share/preview/route.ts` (+ test) |
 | R5 | Share lib fail-closed cleanup | fable | leak safety; security-sensitive | `src/lib/share/**` |
-| R8 | Landing page: matter dashboard | opus | first screen judges see; new route + UI | `src/app/page.tsx`, new `src/components/home/**`, `src/components/brief/MatterList.tsx` (may be deleted once replaced), new `src/app/api/matters/overview/route.ts` (+ test), `src/app/dev/home/**` |
-| R7 | Submission cost and limits | haiku | docs | `docs/submission.md`, `README.md` |
+| R8 | Landing page: matter dashboard | opus | first screen judges see; new route + UI | `src/app/page.tsx`, new `src/components/home/**`, `src/components/brief/MatterList.tsx` (may be deleted once replaced), new `src/app/api/matters/overview/route.ts` (+ test) |
+| R7 | ~~Submission cost and limits~~ DONE on main (`6abeae4`); do not launch | — | — | `docs/submission.md`, `README.md` |
 | R6 | QA sweep (after merges, local) | sonnet | read-only browser pass | none (report only) |
 
 Paths do not overlap. R2 must not touch `lib.ts`; put any new helper in `header-lib.ts`. R2 also owns `src/app/globals.css` (design tokens). R3 and R4 use the tokens and never add raw hex colors.
@@ -75,7 +75,7 @@ Paths do not overlap. R2 must not touch `lib.ts`; put any new helper in `header-
   4. Inline source chips break the header text. Example: "Matter · 2023-05-07 +1 DOI Apr 23, 2023", where the "+1" overflow dangles between facts. Put each fact's label before its chips, keep the overflow count attached to its chip group, and let chip rows wrap as a unit.
   5. The footer listed models with duplicates ("claude-sonnet-5-5, claude-sonnet-5-5"). Dedupe them and show the pipeline version once.
   6. Coverage and value: once coverage exists, the range bar must draw the cap marker and the shaded gap. When coverage is unknown, label the bar "cap unknown" rather than leaving it bare. The waterfall's empty state should name the missing input ("needs coverage limits").
-- **Verify**: `npm run typecheck && npm test -- src/components/brief && npm run build`. Add unit tests in `header-lib.ts` for warning grouping and the synced/built label. `/dev/brief` renders `fixtures/sample-digest.json` once with warnings injected and once without.
+- **Verify**: `npm run typecheck && npm test -- src/components/brief && npm run build`. Add unit tests in `header-lib.ts` for warning grouping and the synced/built label.
 - **Chain**: `ecc:tdd-guide,ecc:typescript-reviewer`
 
 ## R3: Story strip and list layout  (branch `task/r3-strip-layout`)
@@ -86,7 +86,7 @@ Paths do not overlap. R2 must not touch `lib.ts`; put any new helper in `header-
   2. The left column had large empty space under "10 that matter" while the action board ran three screens long. Show the first 5 upcoming items and a "+N more" toggle; keep overdue and waiting-on fully expanded; make both columns `items-start`.
   3. In the Everything table, a stray "·" followed every date. Remove it, and show humanized document titles (R1 supplies them in the data).
   4. Injuries: 20 injuries across 10 body parts must render compactly, grouped by body part, with status badges and page chips, and without one long column.
-- **Verify**: `npm run typecheck && npm test -- src/components/brief && npm run build`. Test the strip layout: no two label boxes intersect for 12 dense milestones at widths 1280, 1920 and 2560; clustering under 8px; the gap-compressed scale is monotonic and caps empty stretches at 8%. `/dev/brief` renders cleanly at 1440 px and at 390 px.
+- **Verify**: `npm run typecheck && npm test -- src/components/brief && npm run build`. Test the strip layout: no two label boxes intersect for 12 dense milestones at widths 1280, 1920 and 2560; clustering under 8px; the gap-compressed scale is monotonic and caps empty stretches at 8%.
 - **Chain**: `ecc:tdd-guide,ecc:typescript-reviewer`
 
 ## R4: Share builder, real preview and less noise  (branch `task/r4-share-builder`)
@@ -98,7 +98,7 @@ Paths do not overlap. R2 must not touch `lib.ts`; put any new helper in `header-
   3. **Scope to the recipient.** In Appointments, Requests and Updates, show the selected provider's items. Fold other providers' disabled items into a collapsed "Other providers (N), not shared" line. Hide completed requests (count them as withheld).
   4. **Provider picker.** The selected provider was rendered greyed out, so it looked disabled. Make the selected state filled and add a check icon.
   5. Confirm that checked checkboxes visibly render as checked (checked items looked empty in the export), and that "Send to X" is enabled when `shared > 0` and no link exists yet.
-- **Verify**: `npm run typecheck && npm test -- src/components/share/builder src/app/api/share/preview && npm run build`. Tests: the preview route rejects a bad body and returns a view built from mocked lib calls; a locked or non-preset category can never be toggled on; the counter math still holds; collapsed groups count correctly. `/dev/share-builder` renders with a mocked draft and preview.
+- **Verify**: `npm run typecheck && npm test -- src/components/share/builder src/app/api/share/preview && npm run build`. Tests: the preview route rejects a bad body and returns a view built from mocked lib calls; a locked or non-preset category can never be toggled on; the counter math still holds; collapsed groups count correctly.
 - **Chain**: `ecc:tdd-guide,ecc:typescript-reviewer,ecc:security-reviewer`
 
 ## R5: Share lib fail-closed cleanup  (branch `task/r5-share-lib`)
@@ -130,10 +130,10 @@ Paths do not overlap. R2 must not touch `lib.ts`; put any new helper in `header-
   4. **Provider activity column** (≥1280 px: right rail; below that, stacked): the latest share opens and replies across matters ("<provider> opened · 10:42", "Will send by Oct 9"), or an empty state.
   5. **How it works** (small, static product copy, no case data): Clio, read-only → digested once and cached → every fact cited → curated provider share. Four steps with icons.
 - **States**: loading skeletons matching the grid, not connected (a big connect card), no matters, overview error (fall back to the plain matter list).
-- **Verify**: `npm run typecheck && npm test -- src/components/home src/app/api/matters && npm run build`. Route test with an in-memory DB and mocked `listOpenMatters`: a matter with no digest returns `digest: null`; counts are correct; there are no Clio calls besides the list. Unit-test the aggregation helpers (today-strip sums, attention ordering). `/dev/home` renders 1 matter and 4 matters (from fixture-derived mocks) at 1440 and 390 px.
+- **Verify**: `npm run typecheck && npm test -- src/components/home src/app/api/matters && npm run build`. Route test with an in-memory DB and mocked `listOpenMatters`: a matter with no digest returns `digest: null`; counts are correct; there are no Clio calls besides the list. Unit-test the aggregation helpers (today-strip sums, attention ordering).
 - **Chain**: `ecc:tdd-guide,ecc:typescript-reviewer,ecc:security-reviewer`
 
-## R7: Submission cost and limits  (branch `task/r7-submission`)
+## R7: Submission cost and limits: DONE on main (`6abeae4`), do not launch
 - **Goal**: `docs/submission.md` has the measured AI cost and current known limits.
 - **Facts to use**: full builds logged $0.178 (v2) and $0.143 (v3) per case. A cached open costs $0.00. Models: `claude-haiku-4-5` (fact extraction), `claude-sonnet-5-5` (injuries from PDFs, synthesis). Report "about $0.15–0.20 per full case digest; $0 on unchanged reopen; re-digest only when Clio content hashes change."
 - Update the known limits: scanned pages are not OCR'd; no attorney login (localhost); providers see changes on their next visit (no push); dev routes are removed before submit.
@@ -143,8 +143,8 @@ Paths do not overlap. R2 must not touch `lib.ts`; put any new helper in `header-
 ---
 
 ## Lead: merge + R6
-Merge order: R5, R1, R4, R2, R3, R8, R7. After each merge: `npm run typecheck && npm test && npm run build`. Then `npm run digest -- --no-sync` (R1 changes the digest output, so a rebuild is required).
+Merge order: R5, R1, R4, R2, R3, R8. After each merge: `npm run typecheck && npm test && npm run build`. Then `npm run digest -- --no-sync` (R1 changes the digest output, so a rebuild is required).
 
 **R6 QA sweep** (local, sonnet, after merges, read-only). Drive `/` (at 1440, 1920 and 390 px; nothing should look stranded in empty space), `/matters/<id>` (both depth modes), the share builder for two providers, and `/s/<token>` at 1440 and 390 px. Report text overlap, unexplained disabled controls, raw ids or filenames, errors, contradictory status (synced/cost), empty panels, and any provider-view text that names another provider, an amount or a note. Report only; the lead fixes or re-dispatches.
 
-Then: `/ecc:code-review`, `/ecc:security-scan`, delete `src/app/dev/`, run a hardcoding grep over `src/ scripts/`, record the demo clip.
+Then: `/ecc:code-review`, `/ecc:security-scan`, confirm no `src/app/dev/` came back, run a hardcoding grep over `src/ scripts/`, record the demo clip.
