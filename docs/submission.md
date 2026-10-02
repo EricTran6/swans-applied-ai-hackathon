@@ -41,15 +41,17 @@
 
 ### Models Used
 
-| Model | Task | Tokens (est.) | Per-case cost |
-|---|---|---|---|
-| `claude-haiku-4-5` | Extract coverage/value/lien facts from notes | 2,000 in / 500 out | ~$0.01 |
-| `claude-sonnet-5-5` | Extract injuries from Bill of Particulars (page by page) | 6,000 in / 1,000 out | ~$0.05 |
-| `claude-sonnet-5-5` | Synthesize brief, top-10 why-lines, open questions | 15,000 in / 2,000 out | ~$0.15 |
-| **Subtotal (first digest)** | — | ~23,000 in / 3,500 out | **~$0.21** |
-| **Cached re-opens** | — | 0 | **$0.00** |
+Measured on the Sapini matter (219 Clio records, 31 PDFs / 361 pages), 2026-10-02, digest v6:
 
-**Estimated total per case** (first open): **TBD — measured** (range $0.15–0.30 depending on matter size and BoP page count)
+| Model | Stage | Calls | Measured cost |
+|---|---|---|---|
+| `claude-haiku-4-5` | Extract coverage layers, case value, liens from custom fields + notes (validated quotes) | 3 | ~$0.020 |
+| `claude-sonnet-5-5` | Injuries from the Bill of Particulars text layer (page-cited) | 1 | $0.047 |
+| `claude-sonnet-5-5` | Brief, top-10 "why" lines, open questions, client status chips | 1 | $0.080 |
+| **First digest (cold)** | | 5 | **$0.147** |
+| **Re-open / unchanged Clio data** | cached by input-set hash | 0 | **$0.00** |
+
+**Approximate cost per case: ~$0.15 for the first digest, $0 for every later open.** Incremental refreshes only re-run stages whose inputs changed (per-record and per-document-version caches). Every call is logged to the `ai_calls` table with tokens and USD.
 
 **No AI on**: KPIs (code), action board (code), top-10 scoring (code), change diff (code), validator (code). Cost is synthesis + extraction only.
 
