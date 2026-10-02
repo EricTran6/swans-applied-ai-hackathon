@@ -110,8 +110,8 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
       <KpiRow kpis={digest.kpis} coverage={digest.coverage} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
-        <CitedBrief brief={digest.brief} openQuestions={digest.openQuestions} />
         <RecoveryMap digest={digest} />
+        <CitedBrief brief={digest.brief} openQuestions={digest.openQuestions} />
       </div>
 
       <StoryStrip timeline={digest.timeline} newKeys={newKeys} />
