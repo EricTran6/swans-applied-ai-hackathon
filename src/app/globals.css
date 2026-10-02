@@ -182,6 +182,12 @@
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 
+/* Print/PDF keeps the bars, dots and banners (browsers drop backgrounds by default) and skips entry animations. */
+@media print {
+  *, *::before, *::after { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .brief-fade-up, .brief-new { animation: none; }
+}
+
 /* Visible keyboard focus on every interactive element (chips, strip dots, toggles). */
 :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 2px solid var(--navy);
