@@ -18,7 +18,7 @@ function Field({ label, caption, children }: { label: string; caption: React.Rea
     <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-ink-2">
       {label}
       {children}
-      <span className="text-[11px] font-normal text-ink-3">{caption}</span>
+      <span className="text-xs font-normal text-ink-3">{caption}</span>
     </label>
   );
 }

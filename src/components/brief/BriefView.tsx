@@ -50,7 +50,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
   const setSince = (v: string | null) => (onCompareSince ? onCompareSince(v) : setLocalSince(v));
 
   return (
-    <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-[1360px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
       <BriefHeader digest={digest} toolbar={toolbar} />
 
       <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center gap-2 border-b border-line bg-paper/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
@@ -137,7 +137,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
       <footer className="pb-6 text-center text-xs text-ink-2">
         {footerLine(digest, formatDate)}
       </footer>
-    </div>
+    </main>
   );
 }
 
@@ -159,7 +159,7 @@ function ChangeList({ changes, onlyNew, onToggleOnlyNew }: { changes: ChangeEntr
               })}
               className="flex w-full items-baseline gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-paper disabled:opacity-60"
             >
-              <span className="shrink-0 rounded bg-info-bg px-1.5 text-[11px] font-medium text-info">{KIND_LABEL[c.kind]}</span>
+              <span className="shrink-0 rounded bg-info-bg px-1.5 text-xs font-medium text-info">{KIND_LABEL[c.kind]}</span>
               <span className="min-w-0 flex-1 truncate">{c.title}</span>
               <span className="shrink-0 text-xs text-ink-2">{formatDate(c.sourceDate ?? c.detectedAt)}</span>
             </button>

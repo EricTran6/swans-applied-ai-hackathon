@@ -6,7 +6,7 @@ export default function ConnectPage() {
   const s = connectionStatus();
   const configured = oauthConfigured();
   return (
-    <main className="mx-auto max-w-md p-8 space-y-4">
+    <main id="main" tabIndex={-1} className="mx-auto max-w-md p-8 space-y-4">
       <h1 className="text-2xl font-semibold">Connect Clio</h1>
       <p className="text-sm">
         Status:{" "}

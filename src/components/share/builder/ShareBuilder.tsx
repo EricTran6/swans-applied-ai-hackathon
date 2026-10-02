@@ -133,7 +133,7 @@ export function ShareBuilder({ matterId, api = httpApi }: { matterId: string; ap
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 pb-28">
+    <main id="main" tabIndex={-1} className="mx-auto max-w-6xl space-y-6 p-4 pb-28">
       <header>
         <h1 className="font-heading text-2xl font-semibold">Share with a provider</h1>
         <p className="text-sm text-ink-2">Choose what a treating provider sees. Strategy, valuation and notes are never shared.</p>
@@ -306,6 +306,6 @@ export function ShareBuilder({ matterId, api = httpApi }: { matterId: string; ap
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

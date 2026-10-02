@@ -51,7 +51,7 @@ export function TopTen({ items, total, newKeys, onlyNew }: {
                   </div>
                   <p className="text-sm text-ink-2">{i.why}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-ink-2">{i.category}</span>
+                    <span className="text-xs font-medium uppercase tracking-wide text-ink-2">{i.category}</span>
                     <Refs refs={[i.ref]} max={1} />
                   </div>
                 </div>

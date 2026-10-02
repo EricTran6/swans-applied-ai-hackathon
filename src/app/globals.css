@@ -26,6 +26,9 @@
   --color-ok: var(--ok);
   --color-ok-bg: var(--ok-bg);
   --color-hl: var(--hl);
+  --color-new: var(--new);
+  --color-new-bg: var(--new-bg);
+  --color-navy-text: var(--navy-text);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -72,6 +75,7 @@
   --ink-3: #5c6575; /* 5.9:1 on paper, 6.2:1 on white (AA) */
   --line: #e7e4dc;
   --navy: #1f3a5f;
+  --navy-text: #1f3a5f;
   --danger: #b42318;
   --danger-bg: #fef3f2;
   --warn: #b54708;
@@ -81,72 +85,94 @@
   --ok: #067647;
   --ok-bg: #ecfdf3;
   --hl: #fff1a8;
+  --new: #8a4b00; /* "changed since last view" text */
+  --new-bg: #fff4dc;
   --background: #faf9f6;
   --foreground: #14181f;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* shadcn tokens mapped onto the brief palette */
+  --card: #ffffff;
+  --card-foreground: #14181f;
+  --popover: #ffffff;
+  --popover-foreground: #14181f;
+  --primary: #1f3a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #f1efe8;
+  --secondary-foreground: #14181f;
+  --muted: #f1efe8;
+  --muted-foreground: #4a5362;
+  --accent: #f1efe8;
+  --accent-foreground: #14181f;
+  --destructive: #b42318;
   --border: #e7e4dc;
-  --input: #e7e4dc;
-  --ring: oklch(0.708 0 0);
+  --input: #8a8578; /* 3.6:1 on white: form-control border (non-text AA) */
+  --ring: #1f3a5f;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #faf9f6;
+  --sidebar-foreground: #14181f;
+  --sidebar-primary: #1f3a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1efe8;
+  --sidebar-accent-foreground: #14181f;
+  --sidebar-border: #e7e4dc;
+  --sidebar-ring: #1f3a5f;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /* AA on dark paper; --navy stays dark so bg-navy + white text passes, --navy-text is the light accent for text. */
+  --paper: #0f1319;
+  --ink: #eef1f6;
+  --ink-2: #b4bdcb;
+  --ink-3: #98a2b3;
+  --line: #2a313c;
+  --navy: #2c4f80;
+  --navy-text: #8fb2e6;
+  --danger: #f97066;
+  --danger-bg: #3a1512;
+  --warn: #fdb022;
+  --warn-bg: #3a2608;
+  --info: #84adff;
+  --info-bg: #14233f;
+  --ok: #47cd89;
+  --ok-bg: #0f2e22;
+  --hl: #5c4a00;
+  --new: #f5b94a;
+  --new-bg: #3a2a0a;
+  --background: #0f1319;
+  --foreground: #eef1f6;
+  --card: #171c24;
+  --card-foreground: #eef1f6;
+  --popover: #171c24;
+  --popover-foreground: #eef1f6;
+  --primary: #8fb2e6;
+  --primary-foreground: #0f1319;
+  --secondary: #1d232d;
+  --secondary-foreground: #eef1f6;
+  --muted: #1d232d;
+  --muted-foreground: #b4bdcb;
+  --accent: #1d232d;
+  --accent-foreground: #eef1f6;
+  --destructive: #f97066;
+  --border: #2a313c;
+  --input: #5b6577;
+  --ring: #8fb2e6;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #0f1319;
+  --sidebar-foreground: #eef1f6;
+  --sidebar-primary: #8fb2e6;
+  --sidebar-primary-foreground: #0f1319;
+  --sidebar-accent: #1d232d;
+  --sidebar-accent-foreground: #eef1f6;
+  --sidebar-border: #2a313c;
+  --sidebar-ring: #8fb2e6;
 }
 
 @layer base {
@@ -190,6 +216,6 @@
 
 /* Visible keyboard focus on every interactive element (chips, strip dots, toggles). */
 :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
-  outline: 2px solid var(--navy);
+  outline: 3px solid var(--ring);
   outline-offset: 2px;
 }
