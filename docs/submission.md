@@ -64,7 +64,7 @@ Measured on the Sapini matter (219 Clio records, 31 PDFs / 361 pages), 2026-10-0
 
 ## 5. Differentiators & What We're Proud Of
 
-### What no one else shows: who gets paid
+### What sets it apart: who gets paid
 - A "Who gets paid" recovery map on the attorney brief: settlement slider capped at the live coverage limit; splits each dollar across attorney fee, firm costs, liens, each treating provider's bill, and the client; every input links to its Clio source.
 - Flags when a case is underwater (bills + liens + fee exceed available coverage) and computes the uniform provider reduction needed for the client to net a target. Answers the slide-5 point that liens are negotiated down at the end.
 - Pure, unit-tested code (`src/lib/digest/recovery.ts`), no AI, $0 per open. Attorney-only; never included in a provider share.
