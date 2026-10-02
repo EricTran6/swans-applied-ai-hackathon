@@ -6,11 +6,13 @@ import { validateRefs } from "@/lib/digest";
 import { callJson, models } from "./client";
 import { byDateDesc, earliest, normName } from "./common";
 
-export const INJURY_EXTRACTOR_VERSION = "injuries-v1";
+export const INJURY_EXTRACTOR_VERSION = "injuries-v2";
 const CLASSIFY_VERSION = "injury-classify-v1";
 export const MAX_INJURY_DOCS = 4;
 const PAGES_PER_CHUNK = 25;
 
+// The plaintiff's bill of particulars is the authoritative itemized injury list; prefer it outright.
+const PARTICULARS = /bill.?of.?particulars/i;
 const TIER1 = /bill.?of.?particulars|particulars|pleading|complaint/i;
 const TIER2 = /medical.?records|operative|ortho|radiology/i;
 
@@ -48,11 +50,13 @@ const INJURIES_SCHEMA = {
 };
 
 const INJURIES_SYSTEM = `You read a personal-injury case document, given as page text with "[[PAGE n]]" markers (absolute page numbers).
-List each distinct injury or diagnosis attributed to the plaintiff/patient.
-- name: short clinical label. bodyPart: the body region or null.
+List each distinct injury or diagnosis attributed to the plaintiff/patient. The text may be ALL CAPS and hard-wrapped; write labels in normal case.
+- One item per diagnosis (a tear, a disc bulge, a concussion), not per symptom: fold pain, spasm, reduced range of motion and similar symptoms into the diagnosis they belong to.
+- name: short clinical label that reads on its own, including laterality/region (e.g. "Left shoulder posterior labral tear").
+- bodyPart: ONE region in Title case, with laterality when stated. Use these labels when they fit: Head, Cervical spine, Thoracic spine, Lumbar spine, Left shoulder, Right shoulder, Left knee, Right knee, Left wrist, Right wrist, Left hand, Right hand, Left hip, Right hip, Left ankle, Right ankle; otherwise a similar short label. Neck injuries are "Cervical spine"; brain, concussion and headache are "Head".
 - status: surgery-done if a surgery for it was performed; surgery-recommended if a surgery is recommended/pending; otherwise diagnosed.
 - firstDocumented: the earliest date (YYYY-MM-DD) stated for it in this document, or null.
-- refs: one or more {page, quote}: the page where it is stated and a VERBATIM substring from that page.
+- refs: one or more {page, quote}: the page where it is stated and a short VERBATIM substring (5-15 words) copied exactly from that page, in its original case.
 Only list injuries explicitly stated in the text. Do not invent pages or quotes.`;
 
 const CLASSIFY_SCHEMA = {
@@ -64,7 +68,10 @@ function docName(d: Document): string { return `${d.folder ?? ""}/${d.filename |
 
 /** Generic chooser. Tier 1 (pleadings) first; else tier 2 (medical); else caller classifies. */
 export function chooseInjuryDocuments(docs: Document[]): { chosen: Document[]; needsClassification: boolean } {
-  const sorted = [...docs].sort(byDateDesc);
+  // A document known to have no text layer cannot yield verifiable quotes.
+  const sorted = [...docs].filter((d) => d.textLayer !== false).sort(byDateDesc);
+  const bop = sorted.filter((d) => PARTICULARS.test(d.filename || d.name));
+  if (bop.length) return { chosen: bop.slice(0, MAX_INJURY_DOCS), needsClassification: false };
   const t1 = sorted.filter((d) => TIER1.test(docName(d)));
   if (t1.length) return { chosen: t1.slice(0, MAX_INJURY_DOCS), needsClassification: false };
   const t2 = sorted.filter((d) => TIER2.test(docName(d)));
@@ -76,12 +83,12 @@ function versionKey(d: Document, extractorVersion: string) {
   return { sourceType: "document" as const, clioId: d.clioId, contentHash: d.latestVersionId ?? d.contentHash, extractorVersion };
 }
 
-export function pageChunks(text: DocumentText): { first: number; body: string }[] {
-  const chunks: { first: number; body: string }[] = [];
+export function pageChunks(text: DocumentText): { first: number; body: string; hasText: boolean }[] {
+  const chunks: { first: number; body: string; hasText: boolean }[] = [];
   for (let i = 0; i < text.pages.length; i += PAGES_PER_CHUNK) {
     const slice = text.pages.slice(i, i + PAGES_PER_CHUNK);
     const body = slice.map((p, j) => `[[PAGE ${i + j + 1}]]\n${p}`).join("\n\n");
-    chunks.push({ first: i + 1, body });
+    chunks.push({ first: i + 1, body, hasText: slice.some((p) => p.trim().length > 0) });
   }
   return chunks;
 }
@@ -130,7 +137,7 @@ export async function extractInjuriesDetailed(i: {
     const text = textById.get(d.clioId)!;
     const found: RawInjury[] = [];
     let failed = false;
-    for (const chunk of pageChunks(text)) {
+    for (const chunk of pageChunks(text).filter((c) => c.hasText)) {
       const res = await callJson<{ injuries: RawInjury[] }>({
         stage: "extract_injuries", model: models().scan, matterId, log: i.log, maxTokens: 6000,
         system: INJURIES_SYSTEM,
@@ -171,11 +178,13 @@ export function mergeInjuries(
       droppedRefs += (inj.refs?.length ?? 0) - llmRefs.length;
       const v = validateRefs(llmRefs, records, docTexts);
       droppedRefs += v.dropped;
-      const refs = v.refs.filter((r) => typeof r.page === "number").map((r) => ({ ...r, value: inj.name }));
-      droppedRefs += v.refs.length - refs.length;
+      const paged = v.refs.filter((r) => typeof r.page === "number");
+      droppedRefs += v.refs.length - paged.length;
+      const pageSeen = new Set<number>();
+      const refs = paged.filter((r) => !pageSeen.has(r.page!) && pageSeen.add(r.page!)).map((r) => ({ ...r, value: inj.name }));
       if (refs.length === 0) continue;
       const status: Injury["status"] = STATUSES.includes(inj.status) ? inj.status : "diagnosed";
-      const key = normName(inj.name);
+      const key = normName(`${inj.bodyPart ?? ""} ${inj.name}`);
       const prev = byName.get(key);
       if (!prev) {
         byName.set(key, { name: inj.name.trim(), bodyPart: inj.bodyPart ?? null, status, firstDocumented: inj.firstDocumented ?? null, refs });

@@ -23,6 +23,15 @@ describe("chooseInjuryDocuments", () => {
     expect(chosen.map((d) => d.clioId)).toEqual([expected.clioId]);
   });
 
+  it("prefers a bill of particulars over other pleadings and skips docs without a text layer", () => {
+    const bop = makeDoc("1", "02-pleadings__bill-of-particulars.pdf", "02 Pleadings", 14, "2024-01-01");
+    const answer = makeDoc("2", "02-pleadings__verified-answer.pdf", "02 Pleadings", 27, "2024-02-01");
+    const complaint = makeDoc("3", "02-pleadings__summons-complaint.pdf", "02 Pleadings", 8, "2024-03-01");
+    expect(chooseInjuryDocuments([answer, complaint, bop]).chosen.map((d) => d.clioId)).toEqual(["1"]);
+    const scanned = { ...bop, textLayer: false };
+    expect(chooseInjuryDocuments([answer, scanned]).chosen.map((d) => d.clioId)).toEqual(["2"]);
+  });
+
   it("falls back to medical records, then to classification", () => {
     const med = makeDoc("9", "ortho-consult.pdf", "04 Medical Records", 3);
     const other = makeDoc("8", "retainer.pdf", "01 Intake", 2);
@@ -66,6 +75,19 @@ describe("extractInjuriesDetailed", () => {
     const r2 = await extractInjuriesDetailed({ records: [doc], docTexts, cache, log });
     expect(createMock).toHaveBeenCalledTimes(1);
     expect(r2.injuries).toHaveLength(2);
+  });
+
+  it("skips page chunks with no text and de-duplicates refs to the same page", async () => {
+    const doc = makeDoc("56", "02-pleadings__bill-of-particulars.pdf", "02 Pleadings", 26);
+    const pages = [...Array.from({ length: 25 }, () => ""), "LEFT SHOULDER TEAR"];
+    createMock.mockResolvedValueOnce(sdkJson({ injuries: [
+      { name: "Left shoulder tear", bodyPart: "Left shoulder", status: "diagnosed", firstDocumented: null,
+        refs: [{ page: 26, quote: "LEFT SHOULDER TEAR" }, { page: 26, quote: "SHOULDER TEAR" }] },
+    ] }));
+    const r = await extractInjuriesDetailed({ records: [doc], docTexts: [makeDocText("56", pages)], cache: new MemoryCache(), log: () => {} });
+    expect(createMock).toHaveBeenCalledTimes(1);
+    expect(createMock.mock.calls[0][0].messages[0].content).toContain("[[PAGE 26]]");
+    expect(r.injuries[0].refs.map((x) => x.page)).toEqual([26]);
   });
 
   it("classifies first pages with Haiku when no name matches", async () => {
