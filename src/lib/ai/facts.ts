@@ -50,7 +50,7 @@ const FACTS_SCHEMA = {
 const SYSTEM = `You extract insurance and money facts from a personal-injury case file for a law firm.
 Each input record starts with "[id]". For every fact you find, emit one item:
 - kind: case_value (attorney's estimate of what the case is worth), coverage (a policy limit layer: BI, UM/UIM, No-fault/PIP, MedPay, Umbrella, Health/Lien, Other), coverage_confirmed (whether limits were confirmed in writing), lien (a lien holder and amount), specials (total medical specials to date).
-- Numbers are plain numbers in USD (250000, not "$250k"). perPerson/perAccident for split limits; amount for everything else.
+- Numbers are plain numbers in USD (12500, not "$12.5k"). perPerson/perAccident for split limits; amount for everything else.
 - ref.id is the exact "[id]" the fact comes from. ref.quote is a VERBATIM substring of that record's text that contains the number (and the carrier/holder when stated). Never paraphrase inside quote.
 - date: the business date of the record if visible, else null.
 Do not compute, sum or infer numbers. Skip anything not supported by a verbatim quote. Omit facts you are unsure about.`;
