@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { repos } from "@/lib/db";
-import { ensureViewerId, noContent, parseBody, withViewerCookie } from "@/lib/server/http";
+import { ensureViewerId, noContent, parseAttorneyBody, withViewerCookie } from "@/lib/server/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const Body = z.object({ matterId: z.string().min(1).max(64) });
 
 export async function POST(req: Request): Promise<Response> {
-  const p = await parseBody(req, Body);
+  const p = await parseAttorneyBody(req, Body);
   if ("error" in p) return p.error;
   const viewer = ensureViewerId(req);
   const r = repos();

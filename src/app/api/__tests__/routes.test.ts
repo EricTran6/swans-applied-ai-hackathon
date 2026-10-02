@@ -14,7 +14,7 @@ vi.mock("@/lib/share", () => ({
     { id: "task:1", category: "requests", included: true, hardDeny: false },
     { id: "kpi:value", category: "valuation", included: false, hardDeny: true },
   ],
-  buildProviderView: (_d: unknown, _r: unknown, ids: string[]) => ({ needs: [{ id: "task:1", text: "x", due: null }], ids }),
+  buildProviderShare: (_d: unknown, _r: unknown, ids: string[]) => ({ view: { needs: [{ id: "need-1", text: "x", due: null }], ids }, needMap: { "need-1": "task:1" } }),
 }));
 vi.mock("@/lib/clio", () => ({ listOpenMatters: async () => [] }));
 vi.mock("@/lib/ingest", () => ({ loadRecords: () => [], syncMatter: async () => ({ records: [], events: [], documentTexts: [] }), getDocumentText: () => null }));
@@ -29,7 +29,8 @@ import { POST as revoke } from "../share/revoke/route";
 import { GET as getFile } from "../documents/[id]/file/route";
 import { GET as getSource } from "../source/route";
 
-const post = (body: unknown) => new Request("http://x/api", { method: "POST", body: JSON.stringify(body) });
+const post = (body: unknown, headers: Record<string, string> = {}) =>
+  new Request("http://x/api", { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
 const ctx = (token: string) => ({ params: Promise.resolve({ token }) });
 
 async function makeShare(): Promise<string> {
@@ -86,9 +87,51 @@ describe("share routes", () => {
     expect((await respond(post({ kind: "bogus" }), ctx("tok-live"))).status).toBe(400);
     expect((await respond(post({ kind: "note", text: "a".repeat(1001) }), ctx("tok-live"))).status).toBe(400);
     expect((await respond(post({ kind: "sent", needId: "task:999" }), ctx("tok-live"))).status).toBe(400);
-    expect((await respond(post({ kind: "sent", needId: "task:1" }), ctx("tok-live"))).status).toBe(204);
-    expect(repos().shareResponses.listByShare(id)).toHaveLength(1);
+    expect((await respond(post({ kind: "sent", needId: "task:1" }), ctx("tok-live"))).status).toBe(400); // raw task ids are not accepted
+    expect((await respond(post({ kind: "sent", needId: "need-1" }), ctx("tok-live"))).status).toBe(204);
+    expect(repos().shareResponses.listByShare(id).map((r) => r.needId)).toEqual(["task:1"]); // translated server-side
     expect((await respond(post({ kind: "note" }), ctx("nope"))).status).toBe(404);
+  });
+  it("never serves the need-id map in the share payload", async () => {
+    await makeShare();
+    const body = await (await getShare(new Request("http://x"), ctx("tok-live"))).text();
+    expect(body).not.toMatch(/needMap/);
+    expect(JSON.stringify((JSON.parse(body) as ProviderView).needs)).not.toMatch(/task:/);
+  });
+  it("public share routes reject bodies over 8KB", async () => {
+    await makeShare();
+    const big = { kind: "note", text: "a".repeat(9000) };
+    expect((await respond(post(big), ctx("tok-live"))).status).toBe(413);
+    const viewBig = new Request("http://x", { method: "POST", headers: { "content-length": "9000" }, body: "a".repeat(9000) });
+    expect((await viewShare(viewBig, ctx("tok-live"))).status).toBe(413);
+    const lying = new Request("http://x", { method: "POST", body: "a".repeat(9000) }); // no/short content-length: streamed cap
+    expect((await viewShare(lying, ctx("tok-live"))).status).toBe(413);
+  });
+  it("dedupes views per ip hash per hour", async () => {
+    const id = await makeShare();
+    const from = (ip: string) => new Request("http://x", { method: "POST", headers: { "x-forwarded-for": ip } });
+    for (let i = 0; i < 3; i++) await viewShare(from("1.1.1.1"), ctx("tok-live"));
+    await viewShare(from("2.2.2.2"), ctx("tok-live"));
+    expect(repos().shareViews.stats(id).views).toBe(2);
+  });
+  it("caps provider responses per share at 50", async () => {
+    await makeShare();
+    for (let i = 0; i < 50; i++) expect((await respond(post({ kind: "sent" }), ctx("tok-live"))).status).toBe(204);
+    expect((await respond(post({ kind: "sent" }), ctx("tok-live"))).status).toBe(429);
+  });
+  it("attorney mutations require JSON and a same-origin (or absent) Origin", async () => {
+    repos().digests.insert({ matterId: "m1", inputSetHash: "h", createdAt: "2026-01-01" } as never, "v1", 0);
+    const body = { matterId: "m1", recipientLabel: "P", includedIds: [] };
+    const form = new Request("http://x/api", { method: "POST", headers: { "content-type": "text/plain" }, body: JSON.stringify(body) });
+    expect((await createShare(form)).status).toBe(415);
+    expect((await createShare(post(body, { origin: "https://evil.example" }))).status).toBe(403);
+    expect((await createShare(post(body, { origin: "null" }))).status).toBe(403);
+    expect((await createShare(post(body, { origin: "http://localhost:4000" }))).status).toBe(403);
+    expect((await revoke(post({ shareId: "x" }, { origin: "https://evil.example" }))).status).toBe(403);
+    expect((await createShare(post(body, { origin: "http://127.0.0.1:3000" }))).status).toBe(201);
+    setDbForTests(openDb(":memory:")); // the mocked token is fixed, so start fresh for a second create
+    repos().digests.insert({ matterId: "m1", inputSetHash: "h", createdAt: "2026-01-01" } as never, "v1", 0);
+    expect((await createShare(post(body, { origin: "http://localhost:3000" }))).status).toBe(201);
   });
   it("rejects an oversized attorney note", async () => {
     const res = await createShare(post({ matterId: "m1", recipientLabel: "P", includedIds: [], attorneyNote: "a".repeat(1001) }));

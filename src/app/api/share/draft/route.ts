@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { repos } from "@/lib/db";
-import { errorJson, json, parseBody } from "@/lib/server/http";
+import { errorJson, json, parseAttorneyBody } from "@/lib/server/http";
 import { buildCandidates, DEFAULT_PRESET } from "@/lib/share";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ const Body = z.object({
 });
 
 export async function POST(req: Request): Promise<Response> {
-  const p = await parseBody(req, Body);
+  const p = await parseAttorneyBody(req, Body);
   if ("error" in p) return p.error;
   const r = repos();
   const digest = r.digests.latest(p.data.matterId);

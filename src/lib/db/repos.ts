@@ -202,6 +202,10 @@ export function createRepos(db: Database.Database) {
     insert(shareId: string, viewedAt: string, ipHash: string | null, userAgent: string | null): void {
       db.prepare("INSERT INTO share_views (share_id, viewed_at, ip_hash, user_agent) VALUES (?,?,?,?)").run(shareId, viewedAt, ipHash, userAgent);
     },
+    /** True when this share already has a view from the same ip hash (NULL matches NULL) at or after `sinceIso`. */
+    seenSince(shareId: string, ipHash: string | null, sinceIso: string): boolean {
+      return !!db.prepare("SELECT 1 FROM share_views WHERE share_id=? AND ip_hash IS ? AND viewed_at>=? LIMIT 1").get(shareId, ipHash, sinceIso);
+    },
     stats(shareId: string): { views: number; firstViewedAt: string | null; lastViewedAt: string | null } {
       const r = db.prepare("SELECT COUNT(*) AS n, MIN(viewed_at) AS f, MAX(viewed_at) AS l FROM share_views WHERE share_id=?").get(shareId) as Row;
       return { views: Number(r.n), firstViewedAt: s(r.f), lastViewedAt: s(r.l) };
@@ -212,6 +216,9 @@ export function createRepos(db: Database.Database) {
     insert(r: ShareResponse): void {
       db.prepare("INSERT INTO share_responses (id, share_id, need_id, kind, promised_date, text, created_at) VALUES (?,?,?,?,?,?,?)")
         .run(r.id, r.shareId, r.needId, r.kind, r.promisedDate, r.text, r.createdAt);
+    },
+    countByShare(shareId: string): number {
+      return Number((db.prepare("SELECT COUNT(*) AS n FROM share_responses WHERE share_id=?").get(shareId) as Row).n);
     },
     listByShare(shareId: string): ShareResponse[] {
       return (db.prepare("SELECT * FROM share_responses WHERE share_id=? ORDER BY created_at, rowid").all(shareId) as Row[]).map(toResponse);

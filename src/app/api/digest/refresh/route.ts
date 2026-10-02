@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { errorJson, json, logError, parseBody } from "@/lib/server/http";
+import { errorJson, json, logError, parseAttorneyBody } from "@/lib/server/http";
 import { buildAndStoreDigest, NotSyncedError } from "@/lib/server/pipeline";
 
 export const runtime = "nodejs";
@@ -9,7 +9,7 @@ export const maxDuration = 300;
 const Body = z.object({ matterId: z.string().min(1).max(64), force: z.boolean().optional() });
 
 export async function POST(req: Request): Promise<Response> {
-  const p = await parseBody(req, Body);
+  const p = await parseAttorneyBody(req, Body);
   if ("error" in p) return p.error;
   try {
     const { version, changed, costUsd, durationMs } = await buildAndStoreDigest(p.data.matterId, { force: p.data.force });
