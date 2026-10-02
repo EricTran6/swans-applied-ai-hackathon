@@ -40,7 +40,7 @@ function ValueKpi({ value, coverage }: { value?: OverviewKpi; coverage?: Overvie
   const bar = miniValueBar(v, c);
   return (
     <MiniKpi label="Value vs coverage">
-      <div className="flex items-baseline gap-1.5 text-[15px]">
+      <div className="flex flex-wrap items-baseline gap-x-1.5 text-[15px]">
         <span className="font-serif text-xl font-semibold text-ink tabular-nums">{v != null ? formatUsdCompact(v) : "—"}</span>
         <span className="text-ink-2">/ {c != null ? formatUsdCompact(c) : "no coverage on file"}</span>
       </div>
@@ -111,7 +111,7 @@ export function MatterCard({ data, hero, now, onRefresh }: { data: MatterOvervie
   const { matter, digest, shares } = data;
   const kpi = (k: OverviewKpi["key"]) => digest?.kpis.find((x) => x.key === k);
   const href = matterHref(matter);
-  const btn = cn("inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium", FOCUS);
+  const btn = cn("inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-medium", FOCUS);
   const fresh = digest?.newSinceOpen ?? null;
   const statusTone: Tone = matter.status === "Open" ? "ok" : "neutral";
 
@@ -120,7 +120,7 @@ export function MatterCard({ data, hero, now, onRefresh }: { data: MatterOvervie
       <Avatar initials={initialsOf(matter.clientName)} url={null} size={hero ? 56 : 48} />
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <h3 className="font-serif text-xl font-semibold leading-tight text-ink">
+          <h3 className="min-w-0 break-words font-serif text-xl font-semibold leading-tight text-ink">
             <Link href={href} className={cn("rounded hover:underline underline-offset-4", FOCUS)}>{matter.clientName}</Link>
           </h3>
           <span className="font-mono text-[13px] text-ink-2">{matter.displayNumber}</span>
