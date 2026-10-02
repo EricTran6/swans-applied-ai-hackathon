@@ -59,6 +59,13 @@ Cut entirely: Clio per-record deep links, vision on scans, body-map graphic, web
 - "Compare since" is a user control; no seeded dates in code.
 - Phase 4 grep: `grep -rniE "sapini|1811202578|justin|375,?000|capiola|sportscare" src/` must return nothing.
 
+## KNOWN HARDCODING TO FIX (judges grep the whole repo, not just `src/`)
+
+- `scripts/clio_dump.py` line 9 hardcodes `MATTER_ID, CLIENT_ID = 1811202578, 2437351988` (the Sapini matter and its client). The Phase 4 grep above only covers `src/`, so this slips through.
+- Fix: take the matter id from a CLI arg or `CLIO_MATTER_ID` env var, and derive the client id from the fetched `matter.client.id` instead of a constant. Then extend the Phase 4 grep to `scripts/ src/`.
+- Also list this in `docs/submission.md` ("hardcoded / half-done") if it is not fixed before 4:00 PM.
+- Docs that name the case (`docs/research/stories/`, this file) are research notes, not runtime code; `docs/research/sapini-data-profile.md` is gitignored.
+
 ## Contract deltas (lead applies to `docs/contract.md` + `src/lib/types.ts` before fan-out)
 
 1. `SourceRef.clioUrl` → optional; add `drawerKey: string` (`"note:123"`, `"document:55#p3"`). The UI opens the drawer, and the matter URL is in the header.
