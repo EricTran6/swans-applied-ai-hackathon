@@ -19,7 +19,7 @@ export function EvidenceDrawer({ sourceRef, onClose }: { sourceRef: SourceRef | 
     if (!key) return;
     let cancelled = false;
     setData(null); setError(null);
-    fetch(`/api/source?drawerKey=${encodeURIComponent(key.split("#")[0])}`)
+    fetch(`/api/source?drawerKey=${encodeURIComponent(key)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((j: SourcePayload) => { if (!cancelled) setData(j); })
       .catch((e: Error) => { if (!cancelled) setError(e.message); });

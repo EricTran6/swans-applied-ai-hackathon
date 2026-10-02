@@ -144,7 +144,9 @@ export function MatterBrief({ matterId }: { matterId: string }) {
 
   if (loading) return <BriefSkeleton />;
 
-  if (error) {
+  const notSynced = error?.status === 404 && /not synced/i.test(error.message);
+
+  if (error && !notSynced) {
     return (
       <StateCard title={error.status === 404 ? "Matter not found" : "Could not load this matter"}>
         <p>{error.status === 401 ? "Connect your Clio account to load matters." : error.message}</p>
@@ -160,7 +162,7 @@ export function MatterBrief({ matterId }: { matterId: string }) {
     );
   }
 
-  if (!data?.digest) {
+  if (notSynced || !data?.digest) {
     return (
       <StateCard title={data?.matter ? data.matter.description || data.matter.displayNumber : "No brief yet"}>
         <p>This matter has not been digested yet. Refresh pulls it from Clio (read-only) and builds the brief once; later opens are served from cache.</p>

@@ -15,7 +15,7 @@ export async function GET(req: Request): Promise<Response> {
   const records = r.items.records(matterId);
   const matter = (records.find((x) => x.sourceType === "matter") as Matter | undefined) ?? null;
   const digest = r.digests.latest(matterId);
-  if (!matter && !digest) return errorJson(404, "matter not synced");
+  if (!matter && !digest) return errorJson(404, "not synced");
 
   const viewer = ensureViewerId(req);
   const vs = r.viewState.get(viewer.id, matterId);

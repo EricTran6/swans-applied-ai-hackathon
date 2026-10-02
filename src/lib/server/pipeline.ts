@@ -1,5 +1,5 @@
 // Sync + digest orchestration. The only place (besides /api/matters) that triggers Clio reads is syncMatter.
-import { buildDigest } from "@/lib/ai";
+import { buildDigest, isReusable } from "@/lib/ai";
 import { inputSetHash } from "@/lib/digest";
 import { repos } from "@/lib/db";
 import { getDocumentText, loadRecords, syncMatter } from "@/lib/ingest";
@@ -34,7 +34,7 @@ export async function buildAndStoreDigest(matterId: string, opts: { force?: bool
   const hash = inputSetHash(records);
   const sinceIso = prev?.createdAt ?? "";
   const changeFeed = r.events.listAfter(matterId, sinceIso);
-  if (prev && !opts.force && prev.inputSetHash === hash) {
+  if (!opts.force && isReusable(prev, hash)) {
     return { version: prev.version, changed: 0, costUsd: 0, durationMs: Date.now() - t0, unchanged: true };
   }
   let costUsd = 0;
@@ -43,7 +43,7 @@ export async function buildAndStoreDigest(matterId: string, opts: { force?: bool
     r.aiCalls.insert({ ...c, matterId: c.matterId ?? matterId }, new Date().toISOString());
   };
   const built = await buildDigest({
-    matter, records, docTexts: opts.docTexts ?? docTextsFor(records), changeFeed, prev,
+    matter, records, docTexts: opts.docTexts ?? docTextsFor(records), changeFeed, prev: opts.force ? null : prev,
     cache: r.extractions.asCache(), log, now: new Date(),
   });
   const stored = r.digests.insert(built, "v1", costUsd);

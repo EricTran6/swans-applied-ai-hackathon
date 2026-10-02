@@ -1,5 +1,6 @@
 "use client";
-import { CalendarClock, ExternalLink, Phone, Mail, StickyNote } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, ExternalLink, Phone, Mail, Share2, StickyNote } from "lucide-react";
 import type { Digest } from "@/lib/types";
 import { formatDate } from "./lib";
 import { Avatar, Pill, Refs } from "./primitives";
@@ -89,6 +90,12 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
               Open in Clio <ExternalLink className="size-3.5" aria-hidden />
             </a>
           )}
+          <Link
+            href={`/matters/${encodeURIComponent(digest.matterId)}/share`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm text-navy hover:bg-paper"
+          >
+            Share with provider <Share2 className="size-3.5" aria-hidden />
+          </Link>
           {toolbar}
         </div>
         <CostBadge meta={digest.meta} />

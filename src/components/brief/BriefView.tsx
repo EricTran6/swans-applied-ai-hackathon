@@ -95,7 +95,9 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
       </div>
 
       {digest.meta.warnings.length > 0 && (
-        <p className="rounded-lg border border-warn/20 bg-warn-bg px-3 py-2 text-xs text-warn">{digest.meta.warnings.join(" · ")}</p>
+        <p className="rounded-lg border border-warn/20 bg-warn-bg px-3 py-2 text-xs text-warn" title={digest.meta.warnings.join("\n")}>
+          {digest.meta.warnings.length} AI section{digest.meta.warnings.length === 1 ? "" : "s"} unavailable. Refresh to retry.
+        </p>
       )}
 
       <KpiRow kpis={digest.kpis} coverage={digest.coverage} />
