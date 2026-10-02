@@ -2,9 +2,9 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { Injury, TimelineEvent } from "@/lib/types";
-import { SourceChip, useEvidence } from "@/components/evidence";
+import { useEvidence } from "@/components/evidence";
 import { cn } from "@/lib/utils";
-import { formatDate, groupInjuries, uniqueRefs, sortFilterTimeline, type TimelineSortKey } from "./lib";
+import { formatDate, groupInjuries, sortFilterTimeline, type TimelineSortKey } from "./lib";
 import { Empty, Panel, Pill, Refs, itemKey, type Tone } from "./primitives";
 import { CATEGORY_COLOR } from "./StoryStrip";
 
@@ -17,31 +17,27 @@ const INJURY_STATUS: Record<Injury["status"], { label: string; tone: Tone }> = {
 export function Injuries({ injuries }: { injuries: Injury[] }) {
   const groups = groupInjuries(injuries);
   return (
-    <Panel title="Injuries" aside="from medical documents · chips open the page">
+    <Panel
+      title="Injuries"
+      aside={groups.length ? `${injuries.length} injuries · ${groups.length} body parts · chips open the page` : "from medical documents"}
+    >
       {groups.length === 0 ? (
         <Empty>No injuries extracted from documents yet.</Empty>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {groups.map((g) => (
-            <div key={g.bodyPart} className="rounded-lg border border-line p-3">
-              <h3 className="mb-2 font-serif text-[15px] font-semibold">{g.bodyPart}</h3>
-              <ul className="space-y-2">
+            <section key={g.bodyPart} aria-label={g.bodyPart} className="min-w-0 rounded-lg border border-line px-3 py-2.5">
+              <h3 className="mb-1 font-serif text-[15px] font-semibold text-ink">{g.bodyPart}</h3>
+              <ul className="divide-y divide-line">
                 {g.injuries.map((i, idx) => (
-                  <li key={`${i.name}-${idx}`} className="space-y-1">
-                    <div className="text-sm text-ink">{i.name}</div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Pill tone={INJURY_STATUS[i.status].tone}>{INJURY_STATUS[i.status].label}</Pill>
-                      {i.firstDocumented && <span className="text-xs text-ink-3">since {formatDate(i.firstDocumented)}</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {uniqueRefs(i.refs).map((r, ri) => (
-                        <SourceChip key={`${r.drawerKey}-${ri}`} sourceRef={r} label={r.page ? `p${r.page}` : undefined} />
-                      ))}
-                    </div>
+                  <li key={`${i.name}-${idx}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1.5">
+                    <span className="line-clamp-2 min-w-0 basis-full text-sm text-ink" title={i.name}>{i.name}</span>
+                    <Pill tone={INJURY_STATUS[i.status].tone}>{INJURY_STATUS[i.status].label}</Pill>
+                    <Refs refs={i.refs} max={3} />
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           ))}
         </div>
       )}
@@ -102,7 +98,7 @@ export function EverythingTable({ timeline, newKeys, onlyNew }: { timeline: Time
       ) : (
         <div className="-mx-4 overflow-x-auto sm:mx-0">
           <table className="w-full min-w-[560px] border-collapse text-sm">
-            <thead className="border-b border-line text-xs text-ink-3">
+            <thead className="border-b border-line text-xs text-ink-2">
               <tr>
                 {header("date", "Date", "w-32")}
                 {header("title", "Event")}
@@ -123,7 +119,7 @@ export function EverythingTable({ timeline, newKeys, onlyNew }: { timeline: Time
                   >
                     <td className="tabular px-2 py-2 font-mono text-xs whitespace-nowrap text-ink-2">
                       {formatDate(e.date)}
-                      {e.derivation !== "stated" && <span className="ml-1 text-ink-3" title={`Date is ${e.derivation}`}>{e.derivation === "inferred" ? "~" : "·"}</span>}
+                      {e.derivation === "inferred" && <span className="ml-1" title="Date is inferred" aria-label="inferred date">~</span>}
                     </td>
                     <td className="px-2 py-2 text-ink">
                       {isNew && <span className="mr-1.5 inline-block size-2 rounded-full bg-info" title="New since last open" />}

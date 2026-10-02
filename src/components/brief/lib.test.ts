@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Injury, SourceRef, TimelineEvent, WaterfallStep } from "@/lib/types";
 import {
   ageFromDob, billBars, daysBetween, formatDate, formatUsd, formatUsdCompact, groupInjuries, initialsOf,
-  niceCeil, rangeBarLayout, relativeTime, sortFilterTimeline, stripLayout, uniqueRefs, waterfallLayout,
+  clusterDots, compressedScale, niceCeil, rangeBarLayout, relativeTime, sortFilterTimeline, stripLayout, uniqueRefs, waterfallLayout,
 } from "./lib";
 
 const ref = (drawerKey: string, value = "v"): SourceRef => ({
@@ -102,35 +102,108 @@ describe("waterfallLayout", () => {
   });
 });
 
+const DAY = 86_400_000;
+const dense = () => {
+  // 12 milestones: 2 old ones, then 10 packed into ~a year (several within days of each other)
+  const dates = ["2022-03-01", "2023-01-10", "2025-07-12", "2025-08-01", "2025-08-03", "2025-08-20", "2025-09-02",
+    "2025-10-11", "2025-11-30", "2026-01-15", "2026-02-02", "2026-03-09"];
+  return dates.map((d, i) => ev(`e${i}`, d, `Milestone number ${i} with a long title`));
+};
+
+describe("compressedScale", () => {
+  const t0 = Date.parse("2020-01-01T00:00:00Z");
+  const anchors = [t0, t0 + 10 * DAY, t0 + 20 * DAY, t0 + 1500 * DAY, t0 + 1510 * DAY, t0 + 3000 * DAY, t0 + 3005 * DAY];
+  it("is monotonic and fills the inner width", () => {
+    const sc = compressedScale(anchors, { width: 1000, pad: 50 });
+    const xs = anchors.map(sc.xOf);
+    for (let i = 1; i < xs.length; i++) expect(xs[i]!).toBeGreaterThanOrEqual(xs[i - 1]!);
+    expect(xs[0]).toBe(50);
+    expect(xs[xs.length - 1]).toBeCloseTo(950, 5);
+    const mids = Array.from({ length: 200 }, (_, i) => sc.xOf(t0 + (i * 3005 * DAY) / 199));
+    for (let i = 1; i < mids.length; i++) expect(mids[i]!).toBeGreaterThanOrEqual(mids[i - 1]!);
+  });
+  it("caps every empty stretch over 120 days at 8% of the width and reports breaks", () => {
+    const sc = compressedScale(anchors, { width: 1000, pad: 50 });
+    const inner = 900;
+    expect(sc.breaks).toHaveLength(2);
+    for (const b of sc.breaks) expect(b.width).toBeLessThanOrEqual(inner * 0.08 + 1e-6);
+    expect(sc.xOf(t0 + 1500 * DAY) - sc.xOf(t0 + 20 * DAY)).toBeLessThanOrEqual(inner * 0.08 + 1e-6);
+  });
+  it("does not compress gaps of 120 days or less", () => {
+    const sc = compressedScale([t0, t0 + 100 * DAY, t0 + 200 * DAY], { width: 1000, pad: 0 });
+    expect(sc.breaks).toEqual([]);
+    expect(sc.xOf(t0 + 100 * DAY)).toBeCloseTo(500, 5);
+  });
+  it("handles degenerate inputs", () => {
+    expect(compressedScale([], { width: 500, pad: 20 }).xOf(5)).toBe(20);
+    expect(compressedScale([t0], { width: 500, pad: 20 }).xOf(t0)).toBe(20);
+  });
+});
+
+describe("clusterDots", () => {
+  it("merges dots closer than 8px and keeps others apart", () => {
+    const pts = [0, 3, 6, 40, 47, 100].map((x, i) => ({ event: ev(`p${i}`, "2024-01-01"), x }));
+    const cl = clusterDots(pts, 8);
+    expect(cl.map((c) => c.events.length)).toEqual([3, 2, 1]);
+    expect(cl[0]!.x).toBeCloseTo(3);
+  });
+});
+
 describe("stripLayout", () => {
-  it("positions events by time within the padded width", () => {
-    const l = stripLayout([ev("b", "2025-01-01"), ev("a", "2024-01-01"), ev("c", "2026-01-01")], { width: 1000, pad: 50, minGap: 10 });
-    expect(l.points.map((p) => p.event.id)).toEqual(["a", "b", "c"]);
-    expect(l.points[0]!.x).toBe(50);
-    expect(l.points[2]!.x).toBe(950);
-    expect(l.points[1]!.x).toBeCloseTo(50 + 900 * (366 / 731), 0);
-    expect(l.ticks.map((t) => t.label)).toEqual(["2025", "2026"]);
-    expect(l.points.every((p) => p.lane === 0)).toBe(true);
+  const boxesOf = (l: ReturnType<typeof stripLayout>) => {
+    const out: { l: number; r: number; side: string; row: number }[] = [];
+    for (const c of l.clusters) if (c.label) out.push({ l: c.label.left, r: c.label.right, side: c.label.side, row: c.label.row });
+    if (l.today?.box) out.push({ l: l.today.box.left, r: l.today.box.right, side: l.today.box.side, row: l.today.box.row });
+    return out;
+  };
+  for (const width of [1280, 1920, 2560]) {
+    it(`never overlaps label boxes for 12 dense milestones at ${width}px`, () => {
+      const now = Date.parse("2026-04-01T00:00:00Z");
+      const l = stripLayout(dense(), { width, now });
+      const b = boxesOf(l);
+      expect(b.length).toBeGreaterThan(0);
+      for (let i = 0; i < b.length; i++) {
+        for (let j = i + 1; j < b.length; j++) {
+          if (b[i]!.side === b[j]!.side && b[i]!.row === b[j]!.row) {
+            expect(b[i]!.r <= b[j]!.l || b[j]!.r <= b[i]!.l).toBe(true);
+          }
+        }
+        expect(b[i]!.l).toBeGreaterThanOrEqual(0);
+        expect(b[i]!.r).toBeLessThanOrEqual(width);
+      }
+      expect(l.clusters.every((c) => c.events.length >= 1)).toBe(true);
+      expect(l.clusters.reduce((n, c) => n + c.events.length, 0)).toBe(12);
+      expect(l.today?.box).not.toBeNull();
+    });
+  }
+  it("gives more labels more room on wider strips", () => {
+    const n = (w: number) => stripLayout(dense(), { width: w }).clusters.filter((c) => c.label).length;
+    expect(n(2560)).toBeGreaterThanOrEqual(n(1280));
   });
-  it("moves colliding labels to other lanes", () => {
-    const l = stripLayout([ev("a", "2024-01-01"), ev("b", "2024-01-05"), ev("c", "2024-01-09"), ev("d", "2026-01-01")], { width: 1000, minGap: 120, maxLanes: 3 });
-    expect(l.points.map((p) => p.lane)).toEqual([0, 1, 2, 0]);
-    expect(l.lanes).toBe(3);
+  it("drops text (label null) rather than overlap when slots run out", () => {
+    const evs = ["a", "b", "c", "d", "e", "f", "g", "h"].map((id, i) => ev(id, `2024-01-${10 + i * 2}`, "Same long title here"));
+    const l = stripLayout(evs, { width: 400, pad: 20, clusterPx: 1 });
+    expect(l.clusters.some((c) => c.label === null)).toBe(true);
+    const b = boxesOf(l);
+    for (let i = 0; i < b.length; i++) for (let j = i + 1; j < b.length; j++)
+      if (b[i]!.side === b[j]!.side && b[i]!.row === b[j]!.row) expect(b[i]!.r <= b[j]!.l || b[j]!.r <= b[i]!.l).toBe(true);
   });
-  it("reuses the oldest lane when lanes are exhausted", () => {
-    const l = stripLayout([ev("a", "2024-01-01"), ev("b", "2024-01-02"), ev("c", "2024-01-03")], { width: 1000, minGap: 500, maxLanes: 2 });
-    expect(l.points.map((p) => p.lane)).toEqual([0, 1, 0]);
+  it("clusters dots under 8px with a count", () => {
+    const l = stripLayout([ev("a", "2024-01-01"), ev("b", "2024-01-02"), ev("c", "2024-04-28")], { width: 800, pad: 20 });
+    expect(l.clusters.map((c) => c.events.length)).toEqual([2, 1]);
+    expect(l.clusters[0]!.label?.text).toBe("2 events");
   });
-  it("extends to today when recent and marks it", () => {
+  it("positions the first and last events at the padding and marks today when recent", () => {
     const now = Date.parse("2026-10-02T00:00:00Z");
-    const l = stripLayout([ev("a", "2024-01-01"), ev("b", "2026-01-01")], { width: 1000, pad: 0, now });
-    expect(l.today).toBe(1000);
-    expect(l.points[1]!.x).toBeLessThan(1000);
+    const l = stripLayout([ev("a", "2026-06-01"), ev("b", "2026-08-01")], { width: 1000, pad: 50, now });
+    expect(l.clusters[0]!.x).toBe(50);
+    expect(l.today!.x).toBe(950);
+    expect(l.clusters[1]!.x).toBeLessThan(950);
   });
   it("handles empty and single events", () => {
-    expect(stripLayout([], { width: 500 }).points).toEqual([]);
+    expect(stripLayout([], { width: 500 }).clusters).toEqual([]);
     const one = stripLayout([ev("a", "2024-01-01")], { width: 500, pad: 20 });
-    expect(one.points[0]!.x).toBe(20);
+    expect(one.clusters[0]!.x).toBe(20);
   });
 });
 

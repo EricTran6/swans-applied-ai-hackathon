@@ -161,61 +161,176 @@ export function waterfallLayout(steps: WaterfallStep[]): WaterfallBar[] {
 }
 
 // ---------- story strip ----------
-export interface StripPoint { event: TimelineEvent; x: number; lane: number }
-export interface StripLayout {
-  points: StripPoint[];
-  ticks: { x: number; label: string }[];   // year boundaries
-  today: number | null;                    // x of "today" if within range
-  lanes: number;
+export interface TimeScale {
+  xOf: (ms: number) => number;
+  /** Compressed empty stretches, centre x and width in px. */
+  breaks: { x: number; width: number }[];
 }
 
 /**
- * Time-scaled x positions for milestones in a strip of `width` px (with `pad` px margins).
- * Labels that would collide (closer than `minGap`) are pushed to the next lane (max `maxLanes`).
+ * Gap-compressed time scale over [pad, width-pad]. Any empty stretch between consecutive anchor times
+ * longer than `gapDays` takes at most `maxGapFrac` of the inner width, so dense stretches get the room.
+ * Monotonic non-decreasing in time.
+ */
+export function compressedScale(
+  anchors: number[],
+  opts: { width: number; pad?: number; gapDays?: number; maxGapFrac?: number },
+): TimeScale {
+  const { width, pad = 40, gapDays = 120, maxGapFrac = 0.08 } = opts;
+  const t = [...new Set(anchors.filter((n) => Number.isFinite(n)))].sort((a, b) => a - b);
+  const inner = Math.max(1, width - 2 * pad);
+  if (t.length === 0) return { xOf: () => pad, breaks: [] };
+  if (t.length === 1) return { xOf: () => pad, breaks: [] };
+  const gaps = t.slice(1).map((v, i) => v - t[i]!);
+  const isLong = gaps.map((g) => g > gapDays * DAY_MS);
+  const cap = inner * maxGapFrac;
+  const normalSpan = gaps.reduce((s, g, i) => (isLong[i] ? s : s + g), 0);
+  const nLong = isLong.filter(Boolean).length;
+  const longW = gaps.map(() => 0);
+  let s = normalSpan > 0 ? inner / (normalSpan + gaps.reduce((a, g, i) => (isLong[i] ? a + g : a), 0)) : 0;
+  for (let it = 0; it < 8; it++) {
+    gaps.forEach((g, i) => { if (isLong[i]) longW[i] = Math.min(cap, g * s); });
+    const used = longW.reduce((a, b) => a + b, 0);
+    s = normalSpan > 0 ? Math.max(0, inner - used) / normalSpan : 0;
+  }
+  if (normalSpan === 0) gaps.forEach((_, i) => { if (isLong[i]) longW[i] = Math.min(cap, inner / Math.max(1, nLong)); });
+  const widths = gaps.map((g, i) => (isLong[i] ? longW[i]! : g * s));
+  const xs = [pad];
+  widths.forEach((w) => xs.push(xs[xs.length - 1]! + w));
+  const xOf = (ms: number): number => {
+    if (ms <= t[0]!) return xs[0]!;
+    if (ms >= t[t.length - 1]!) return xs[xs.length - 1]!;
+    let lo = 0;
+    let hi = t.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (t[mid]! <= ms) lo = mid; else hi = mid; }
+    const f = (ms - t[lo]!) / (t[hi]! - t[lo]!);
+    return xs[lo]! + f * (xs[hi]! - xs[lo]!);
+  };
+  const breaks = widths.flatMap((w, i) => (isLong[i] ? [{ x: xs[i]! + w / 2, width: w }] : []));
+  return { xOf, breaks };
+}
+
+export interface StripCluster { x: number; events: TimelineEvent[] }
+
+/** Merge dots closer than `minPx` to the previous one into a single cluster (count = events.length). */
+export function clusterDots(points: { event: TimelineEvent; x: number }[], minPx = 8): StripCluster[] {
+  const out: { xs: number[]; events: TimelineEvent[] }[] = [];
+  for (const p of points) {
+    const last = out[out.length - 1];
+    if (last && p.x - last.xs[last.xs.length - 1]! < minPx) { last.xs.push(p.x); last.events.push(p.event); }
+    else out.push({ xs: [p.x], events: [p.event] });
+  }
+  return out.map((c) => ({ x: c.xs.reduce((a, b) => a + b, 0) / c.xs.length, events: c.events }));
+}
+
+export interface StripBox { left: number; right: number; side: "above" | "below"; row: number }
+export interface StripLabelItem { id: string; x: number; width: number }
+/**
+ * Greedy label placement. `items` are placed in the given order into the first free slot
+ * (rows nearest the axis first, alternating sides). A slot is free when the box overlaps no other box in its row
+ * (+`gap`) and the connector from the box to the axis crosses no nearer box. Unplaceable items get null.
+ */
+export function placeBoxes(
+  items: StripLabelItem[],
+  opts: { width: number; rowsAbove: number; rowsBelow: number; gap?: number },
+): Map<string, StripBox | null> {
+  const { width, rowsAbove, rowsBelow, gap = 8 } = opts;
+  const placed: (StripBox & { cx: number })[] = [];
+  const result = new Map<string, StripBox | null>();
+  const slots: { side: "above" | "below"; row: number }[] = [];
+  for (let r = 0; r < Math.max(rowsAbove, rowsBelow); r++) {
+    if (r < rowsAbove) slots.push({ side: "above", row: r });
+    if (r < rowsBelow) slots.push({ side: "below", row: r });
+  }
+  for (const it of items) {
+    const left = Math.min(Math.max(it.x - it.width / 2, 0), Math.max(0, width - it.width));
+    const right = left + it.width;
+    const slot = slots.find(({ side, row }) => placed.every((p) => {
+      if (p.side !== side) return true;
+      if (p.row === row) return right + gap <= p.left || left - gap >= p.right;
+      // connector of the farther box must not cross the nearer box
+      const [near, far] = p.row < row ? [p, { left, right, cx: it.x }] : [{ left, right }, p];
+      return !(far.cx >= near.left - 2 && far.cx <= near.right + 2);
+    }));
+    if (slot) { const b = { left, right, ...slot }; placed.push({ ...b, cx: it.x }); result.set(it.id, b); }
+    else result.set(it.id, null);
+  }
+  return result;
+}
+
+export interface StripLabel extends StripBox { text: string; date: string }
+export interface StripLayout {
+  clusters: (StripCluster & { label: StripLabel | null })[];
+  ticks: { x: number; label: string }[];
+  today: { x: number; box: StripBox | null } | null;
+  breaks: { x: number; width: number }[];
+  rowsAbove: number;
+  rowsBelow: number;
+}
+
+const clipText = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+
+/**
+ * Pixel layout of the story strip at its real `width`: gap-compressed time scale, dots merged under `clusterPx`,
+ * labels assigned greedily to up to `rowsAbove`/`rowsBelow` rows, never overlapping (overflow labels are null).
  */
 export function stripLayout(
   events: TimelineEvent[],
-  opts: { width: number; pad?: number; minGap?: number; maxLanes?: number; now?: number },
+  opts: {
+    width: number; pad?: number; now?: number; rowsAbove?: number; rowsBelow?: number;
+    charW?: number; maxTitle?: number; clusterPx?: number; gapDays?: number; maxGapFrac?: number;
+  },
 ): StripLayout {
-  const { width, pad = 60, minGap = 120, maxLanes = 3 } = opts;
+  const { width, pad = 40, rowsAbove = 3, rowsBelow = 2, charW = 7, maxTitle = 26, clusterPx = 8 } = opts;
   const dated = events
     .map((e) => ({ e, ms: toMs(e.date) }))
     .filter((d) => !Number.isNaN(d.ms))
     .sort((a, b) => a.ms - b.ms);
-  if (!dated.length) return { points: [], ticks: [], today: null, lanes: 0 };
-  const now = opts.now;
+  const empty: StripLayout = { clusters: [], ticks: [], today: null, breaks: [], rowsAbove, rowsBelow };
+  if (!dated.length) return empty;
   const lo = dated[0]!.ms;
   let hi = dated[dated.length - 1]!.ms;
-  if (now != null && now > hi && now - hi < 2 * 365 * DAY_MS) hi = now;
-  const span = Math.max(hi - lo, DAY_MS);
-  const inner = Math.max(1, width - 2 * pad);
-  const xOf = (ms: number) => pad + ((ms - lo) / span) * inner;
+  const { now } = opts;
+  const showToday = now != null && now > hi && now - hi < 2 * 365 * DAY_MS;
+  if (showToday) hi = now!;
+  const scale = compressedScale(dated.map((d) => d.ms).concat(showToday ? [now!] : []), { width, pad, gapDays: opts.gapDays, maxGapFrac: opts.maxGapFrac });
+  const clusters = clusterDots(dated.map((d) => ({ event: d.e, x: scale.xOf(d.ms) })), clusterPx);
 
-  const lastXInLane: number[] = [];
-  const points = dated.map(({ e, ms }) => {
-    const x = xOf(ms);
-    let lane = lastXInLane.findIndex((lx) => x - lx >= minGap);
-    if (lane === -1) lane = lastXInLane.length < maxLanes ? lastXInLane.length : leastRecent(lastXInLane);
-    lastXInLane[lane] = x;
-    return { event: e, x, lane };
+  const todayX = showToday ? scale.xOf(now!) : null;
+  const items: StripLabelItem[] = [];
+  const text = new Map<string, { text: string; date: string }>();
+  // Today goes first so it always keeps a slot and no later label can cover it.
+  if (todayX != null) items.push({ id: "today", x: todayX, width: 5 * charW + 12 });
+  clusters.forEach((c, i) => {
+    const first = c.events[0]!;
+    const t = c.events.length > 1 ? `${c.events.length} events` : clipText(first.title, maxTitle);
+    const d = c.events.length > 1 ? `${formatDate(first.date)} →` : `${formatDate(first.date)}${first.derivation === "inferred" ? " ~" : ""}`;
+    text.set(String(i), { text: t, date: d });
+    items.push({ id: String(i), x: c.x, width: Math.max(t.length, d.length * 0.9) * charW + 8 });
   });
+  const boxes = placeBoxes(items, { width, rowsAbove, rowsBelow });
 
   const ticks: { x: number; label: string }[] = [];
   const y0 = new Date(lo).getUTCFullYear() + 1;
   const y1 = new Date(hi).getUTCFullYear();
-  for (let y = y0; y <= y1; y++) ticks.push({ x: xOf(Date.UTC(y, 0, 1)), label: String(y) });
-
+  for (let y = y0; y <= y1; y++) {
+    const x = scale.xOf(Date.UTC(y, 0, 1));
+    const lastTick = ticks[ticks.length - 1];
+    if (clusters.some((c) => Math.abs(c.x - x) < 14) || (todayX != null && Math.abs(todayX - x) < 30)) continue;
+    if (lastTick && x - lastTick.x < 40) continue;
+    ticks.push({ x, label: String(y) });
+  }
   return {
-    points,
+    clusters: clusters.map((c, i) => {
+      const b = boxes.get(String(i));
+      return { ...c, label: b ? { ...b, ...text.get(String(i))! } : null };
+    }),
     ticks,
-    today: now != null && now >= lo && now <= hi ? xOf(now) : null,
-    lanes: Math.max(1, lastXInLane.length),
+    today: todayX != null ? { x: todayX, box: boxes.get("today") ?? null } : null,
+    breaks: scale.breaks,
+    rowsAbove,
+    rowsBelow,
   };
-}
-function leastRecent(xs: number[]): number {
-  let idx = 0;
-  xs.forEach((x, i) => { if (x < xs[idx]!) idx = i; });
-  return idx;
 }
 
 // ---------- injuries ----------
