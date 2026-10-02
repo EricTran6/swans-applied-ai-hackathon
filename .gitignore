@@ -9,3 +9,6 @@ dist/
 build/
 .next/
 .claude/settings.local.json
+.cache/
+docs/research/sapini-data-profile.md
+data/
