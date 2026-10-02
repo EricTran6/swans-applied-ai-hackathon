@@ -154,16 +154,23 @@ export async function extractFacts(i: {
 
 interface Hydrated { fact: RawFact; ref: SourceRef }
 
+function withoutUnquotedNumbers(f: RawFact): RawFact {
+  const keep = (n: number | null) => (n !== null && quoteContainsNumber(f.ref.quote, n) ? n : null);
+  return { ...f, amount: keep(f.amount), perPerson: keep(f.perPerson), perAccident: keep(f.perAccident) };
+}
+
 /** Validate refs + numeric-quote rule, then apply precedence; pure, unit-tested. */
 export function mergeFacts(raw: RawFact[], records: ClioRecord[]): { facts: ExtractedFacts; droppedRefs: number } {
   let droppedRefs = 0;
   const ok: Hydrated[] = [];
-  for (const f of raw) {
-    if (!f || !f.ref || typeof f.ref.id !== "string") { droppedRefs++; continue; }
+  for (const rawFact of raw) {
+    if (!rawFact || !rawFact.ref || typeof rawFact.ref.id !== "string") { droppedRefs++; continue; }
+    const qualitative = rawFact.kind === "coverage_confirmed"
+      || (rawFact.kind === "coverage" && (rawFact.exhausted === true || rawFact.selfInsured === true));
+    // A qualitative statement ("self-insured", "exhausted") stands on its words; numbers its quote lacks are discarded.
+    const f = qualitative ? withoutUnquotedNumbers(rawFact) : rawFact;
     const numbers = [f.amount, f.perPerson, f.perAccident].filter((n): n is number => typeof n === "number");
-    const qualitative = f.kind === "coverage_confirmed" || (f.kind === "coverage" && (f.exhausted === true || f.selfInsured === true));
-    const needsNumber = !qualitative;
-    if (needsNumber && numbers.length === 0) { droppedRefs++; continue; }
+    if (!qualitative && numbers.length === 0) { droppedRefs++; continue; }
     if (!numbers.every((n) => quoteContainsNumber(f.ref.quote, n))) { droppedRefs++; continue; }
     const v = validateRefs([{ id: f.ref.id, quote: f.ref.quote ?? null }], records, []);
     if (v.refs.length === 0) { droppedRefs += Math.max(1, v.dropped); continue; }

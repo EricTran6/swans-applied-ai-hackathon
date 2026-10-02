@@ -88,6 +88,15 @@ describe("mergeFacts", () => {
     expect(r.facts.conflicts[0].refs.map((x) => x.clioId)).toEqual(["2", "5"]);
   });
 
+  it("keeps a self-insured statement whose quote lacks the model's number, as a conflict against the stated limit", () => {
+    const r = mergeFacts([
+      fact({ kind: "coverage", coverageKind: "BI", perPerson: 250000, selfInsured: true, ref: { id: "note:5", quote: "self-insured; there is no carrier" } }),
+      fact({ kind: "coverage", coverageKind: "BI", perPerson: 250000, perAccident: 500000, ref: { id: "note:2", quote: "$250,000/$500,000" } }),
+    ], records);
+    expect(r.droppedRefs).toBe(0);
+    expect(r.facts.conflicts[0].refs.map((x) => x.clioId)).toEqual(["2", "5"]);
+  });
+
   it("drops a coverage fact with no number unless it states exhaustion or self-insurance", () => {
     const r = mergeFacts([fact({ kind: "coverage", coverageKind: "BI", ref: { id: "note:5", quote: "self-insured" } })], records);
     expect(r.facts.coverage).toHaveLength(0);
