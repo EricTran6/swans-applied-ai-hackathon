@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { Check, ChevronRight, Copy, Lock, TriangleAlert } from "lucide-react";
+import { Check, ChevronRight, Copy, Eye, EyeOff, Lock, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,6 +40,17 @@ function AuditList({ id, items, rid }: { id: string; items: ShareCandidate[]; ri
         </li>
       ))}
     </ul>
+  );
+}
+
+function OpenedPill({ views, lastViewedAt }: { views: number; lastViewedAt: string | null }) {
+  const opened = views > 0;
+  const Icon = opened ? Eye : EyeOff;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${opened ? "bg-ok-bg text-ok" : "border border-line bg-paper text-ink-2"}`}>
+      <Icon aria-hidden className="size-3.5 shrink-0" />
+      <span className="tabular">{openedLabel(views, lastViewedAt)}</span>
+    </span>
   );
 }
 
@@ -249,7 +260,7 @@ export function ShareBuilder({ matterId, api = httpApi }: { matterId: string; ap
               </span>
             </div>
             <div className="rounded-lg border bg-muted/30" data-testid="preview">
-              {view ? <ProviderViewCard view={view} /> : (
+              {view ? <ProviderViewCard view={view} embedded /> : (
                 <p className="p-4 text-sm text-ink-2">{c.shared === 0 ? "Nothing selected yet." : "Building preview..."}</p>
               )}
             </div>
@@ -277,7 +288,7 @@ export function ShareBuilder({ matterId, api = httpApi }: { matterId: string; ap
               <li key={s.shareId} className="rounded-lg border bg-card p-4 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{s.recipientLabel}</span>
-                  {revoked ? <Badge variant="destructive">Revoked</Badge> : <Badge variant="secondary">{openedLabel(s.views, s.lastViewedAt)}</Badge>}
+                  {revoked ? <Badge variant="destructive">Revoked</Badge> : <OpenedPill views={s.views} lastViewedAt={s.lastViewedAt} />}
                   <span className={meta}>{s.sharedCount} shared / {s.withheldCount} withheld</span>
                   {!revoked && <Button size="sm" variant="outline" className={`ml-auto ${focusRing}`} onClick={() => revoke(s.shareId)}>Revoke</Button>}
                 </div>
