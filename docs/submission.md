@@ -111,11 +111,11 @@ Measured on the Sapini matter (219 Clio records, 31 PDFs / 361 pages), 2026-10-0
 
 1. **Ball-in-court label** on action board: AI-suggested label for tasks. Scoring rule in place; UI label not rendered.
 
-2. **Care team & findings** on provider view: Optional section showing treating providers and findings from injuries (gated on HIPAA field). Database structure in place; UI rendering not implemented.
+2. **AI-suggested action lane** is empty: the "Suggested (AI)" lane renders only when suggestions exist, and none are generated yet.
 
 ## Next Steps if Continuing
 
-- [ ] Render care team on provider view (if HIPAA field is true)
+- [ ] Generate AI-suggested actions for the action board
 - [ ] Add "ball-in-court" label to action board waiting-on items
 - [ ] Email notification preference in provider profile (not yet connected to actual email)
 - [ ] Advanced: user login + multi-user workspace (currently single-user localhost)
