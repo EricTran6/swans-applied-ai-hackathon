@@ -27,8 +27,8 @@ export function Refs({ refs, max = 3, className }: { refs: SourceRef[]; max?: nu
   if (!list.length) return null;
   const shown = list.slice(0, max);
   return (
-    <span className={cn("inline-flex flex-wrap items-center gap-1 align-middle", className)}>
-      {shown.map((r) => <SourceChip key={r.drawerKey} sourceRef={r} label={chipLabel(r)} />)}
+    <span className={cn("inline-flex max-w-full shrink-0 flex-wrap items-center gap-1 align-middle", className)}>
+      {shown.map((r, i) => <SourceChip key={`${r.drawerKey}-${i}`} sourceRef={r} label={chipLabel(r)} />)}
       {list.length > max && <span className="font-mono text-[11px] text-ink-3">+{list.length - max}</span>}
     </span>
   );
@@ -57,7 +57,7 @@ export function Pill({ tone = "neutral", className, children, title }: {
   tone?: Tone; className?: string; children: React.ReactNode; title?: string;
 }) {
   return (
-    <span title={title} className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap", TONE[tone], className)}>
+    <span title={title} className={cn("inline-flex items-center gap-1 max-w-full rounded-full border px-2 py-0.5 text-xs font-medium break-words whitespace-normal", TONE[tone], className)}>
       {children}
     </span>
   );

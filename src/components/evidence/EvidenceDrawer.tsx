@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Badge } from "@/components/ui/badge";
 import { splitByQuote } from "./highlight";
 import { PdfViewer } from "./PdfViewer";
-import { SOURCE_LABEL } from "./meta";
+import { SOURCE_LABEL, formatSourceDate } from "./meta";
 
 type SourcePayload = { record: ClioRecord; documentText?: { page: number; pageCount: number; text: string } };
 
@@ -39,7 +39,7 @@ export function EvidenceDrawer({ sourceRef, onClose }: { sourceRef: SourceRef | 
             <SheetHeader className="p-0 pr-8">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">{SOURCE_LABEL[sourceRef.sourceType]}</Badge>
-                {(rec?.sourceDate ?? sourceRef.sourceDate) && <span className="text-xs text-muted-foreground">{rec?.sourceDate ?? sourceRef.sourceDate}</span>}
+                {(rec?.sourceDate ?? sourceRef.sourceDate) && <span className="text-xs text-muted-foreground">{formatSourceDate((rec?.sourceDate ?? sourceRef.sourceDate)!)}</span>}
                 {isDoc && <Badge variant="outline">page {page}</Badge>}
               </div>
               <SheetTitle>{rec?.title ?? sourceRef.value}</SheetTitle>

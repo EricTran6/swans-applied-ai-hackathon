@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import type { Injury, TimelineEvent } from "@/lib/types";
 import { SourceChip, useEvidence } from "@/components/evidence";
 import { cn } from "@/lib/utils";
-import { formatDate, groupInjuries, sortFilterTimeline, type TimelineSortKey } from "./lib";
+import { formatDate, groupInjuries, uniqueRefs, sortFilterTimeline, type TimelineSortKey } from "./lib";
 import { Empty, Panel, Pill, Refs, itemKey, type Tone } from "./primitives";
 import { CATEGORY_COLOR } from "./StoryStrip";
 
@@ -34,8 +34,8 @@ export function Injuries({ injuries }: { injuries: Injury[] }) {
                       {i.firstDocumented && <span className="text-xs text-ink-3">since {formatDate(i.firstDocumented)}</span>}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {i.refs.map((r) => (
-                        <SourceChip key={r.drawerKey} sourceRef={r} label={r.page ? `p${r.page}` : undefined} />
+                      {uniqueRefs(i.refs).map((r, ri) => (
+                        <SourceChip key={`${r.drawerKey}-${ri}`} sourceRef={r} label={r.page ? `p${r.page}` : undefined} />
                       ))}
                     </div>
                   </li>

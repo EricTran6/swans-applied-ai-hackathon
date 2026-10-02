@@ -5,7 +5,7 @@ import { Briefcase, Calendar, CheckSquare, FileText, Mail, NotebookText, Receipt
 import type { SourceRef, SourceType } from "@/lib/types";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { EvidenceDrawer } from "./EvidenceDrawer";
-import { SOURCE_LABEL } from "./meta";
+import { SOURCE_LABEL, formatSourceDate } from "./meta";
 
 const ICONS: Record<SourceType, LucideIcon> = {
   matter: Briefcase, custom_field: Tag, contact: User, note: NotebookText, communication: Mail,
@@ -43,7 +43,7 @@ export function SourceChip({ sourceRef, label }: { sourceRef: SourceRef; label?:
       <HoverCardTrigger
         render={
           <button type="button" data-drawer-key={sourceRef.drawerKey} onClick={() => open(sourceRef)}
-            className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" />
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" />
         }
       >
         <Icon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
@@ -51,7 +51,7 @@ export function SourceChip({ sourceRef, label }: { sourceRef: SourceRef; label?:
       </HoverCardTrigger>
       <HoverCardContent className="w-64 space-y-1 text-xs">
         <div className="font-medium">{SOURCE_LABEL[sourceRef.sourceType]}{sourceRef.page ? `, page ${sourceRef.page}` : ""}</div>
-        {sourceRef.sourceDate && <div className="text-muted-foreground">{sourceRef.sourceDate}</div>}
+        {sourceRef.sourceDate && <div className="text-muted-foreground">{formatSourceDate(sourceRef.sourceDate)}</div>}
         <div>Derivation: {DERIVATION[sourceRef.derivation]}</div>
         <div>{sourceRef.quoteVerified ? "Quote verified" : sourceRef.sourceType === "document" ? "Model-read, check page" : "No quote to verify"}</div>
         <div className="text-muted-foreground">Click to open source</div>

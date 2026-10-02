@@ -58,7 +58,7 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
             )}
             {lc && <Refs refs={[lc.ref]} max={1} />}
             {client.nextTouchpoint && (
-              <span className="inline-flex items-center gap-1 text-xs text-ink-2">
+              <span className="inline-flex max-w-full flex-wrap items-center gap-1 text-xs text-ink-2">
                 <CalendarClock className="size-3.5 text-ink-3" aria-hidden />
                 Next: {client.nextTouchpoint.title} · {formatDate(client.nextTouchpoint.date, { year: false })}
                 <Refs refs={[client.nextTouchpoint.ref]} max={1} />
@@ -68,8 +68,8 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
           {lc?.summary && <p className="text-xs text-ink-3">“{lc.summary}”</p>}
           {client.statusChips.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              {client.statusChips.map((c) => (
-                <span key={c.text} className="inline-flex items-center gap-1">
+              {client.statusChips.map((c, i) => (
+                <span key={`${c.text}-${i}`} className="inline-flex max-w-full items-center gap-1">
                   <Pill tone="neutral">{c.text}</Pill>
                   <Refs refs={c.refs} max={1} />
                 </span>
