@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { ProviderViewCard } from "@/components/share/provider";
 import { ViewBeacon } from "./view-beacon";
 import { findLiveShare } from "@/lib/server/shares";
@@ -25,14 +26,7 @@ function load(token: string): ProviderView | null {
 export default async function SharePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const view = load(token);
-  if (!view) {
-    return (
-      <main className="mx-auto max-w-xl p-6 text-center">
-        <h1 className="text-xl font-semibold">This link has expired or been revoked</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Please contact the law firm that sent it and ask for a new link.</p>
-      </main>
-    );
-  }
+  if (!view) notFound(); // unknown, expired and revoked are the same 404 (see not-found.tsx)
   return (
     <>
       <ViewBeacon token={token} />

@@ -6,7 +6,7 @@ import { createRepos, type Repos } from "./repos";
 
 export * from "./repos";
 
-const g = globalThis as unknown as { __caseDb?: Database.Database; __caseRepos?: Repos };
+const g = globalThis as unknown as { __caseDb?: Database.Database; __caseRepos?: Repos; __caseReposFactory?: unknown };
 
 function schemaSql(): string {
   const candidates = [path.join(process.cwd(), "src/lib/db/schema.sql"), path.join(__dirname, "schema.sql")];
@@ -30,7 +30,11 @@ export function getDb(): Database.Database {
 }
 
 export function repos(): Repos {
-  if (!g.__caseRepos) g.__caseRepos = createRepos(getDb());
+  // Rebuild when repos.ts hot-reloads in dev, so new repo methods are never missing from a stale cache.
+  if (!g.__caseRepos || g.__caseReposFactory !== createRepos) {
+    g.__caseRepos = createRepos(getDb());
+    g.__caseReposFactory = createRepos;
+  }
   return g.__caseRepos;
 }
 
@@ -38,4 +42,5 @@ export function repos(): Repos {
 export function setDbForTests(db: Database.Database | null): void {
   g.__caseDb = db ?? undefined;
   g.__caseRepos = db ? createRepos(db) : undefined;
+  g.__caseReposFactory = createRepos;
 }
