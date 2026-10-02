@@ -14,12 +14,22 @@ export { models, priceUsd, PRICES } from "./client";
 
 export const PIPELINE_VERSION = `${FACTS_EXTRACTOR_VERSION}+${INJURY_EXTRACTOR_VERSION}+${SYNTH_VERSION}`;
 
+// Warnings that mean a stage did not run (transient); such a digest must not be served from cache.
+const TRANSIENT_FAILURE = /API error|model refused|output truncated|unparseable JSON|no output/;
+
+/** A previous digest is reusable only for the same inputs, same pipeline, and no failed AI stage. */
+export function isReusable(prev: Digest | null, hash: string): prev is Digest {
+  if (!prev || prev.inputSetHash !== hash) return false;
+  if (prev.meta?.models?.pipeline !== PIPELINE_VERSION) return false;
+  return !(prev.meta?.warnings ?? []).some((w) => TRANSIENT_FAILURE.test(w));
+}
+
 export async function buildDigest(i: {
   matter: Matter; records: ClioRecord[]; docTexts: DocumentText[]; changeFeed: ChangeEntry[];
   prev: Digest | null; cache: ExtractionCache; log: (c: AiCall) => void; now: Date;
 }): Promise<Omit<Digest, "version">> {
   const hash = inputSetHash(i.records);
-  if (i.prev && i.prev.inputSetHash === hash) {
+  if (isReusable(i.prev, hash)) {
     const { version: _version, ...rest } = i.prev;
     void _version;
     return { ...rest, meta: { ...rest.meta, cached: true } };

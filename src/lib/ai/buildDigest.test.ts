@@ -78,6 +78,25 @@ describe("buildDigest", () => {
     expect("version" in again).toBe(false);
   });
 
+  it("rebuilds when the previous digest degraded on an API error, even with the same inputs", async () => {
+    respond();
+    const ok = await buildDigest({ matter, records, docTexts, changeFeed: [], prev: null, cache: new MemoryCache(), log: () => {}, now });
+    const prev = { version: 1, ...ok, meta: { ...ok.meta, warnings: ["synthesize: API error (boom)"] } } as Digest;
+    createMock.mockClear();
+    const again = await buildDigest({ matter, records, docTexts, changeFeed: [], prev, cache: new MemoryCache(), log: () => {}, now });
+    expect(again.meta.cached).toBeUndefined();
+    expect(createMock).toHaveBeenCalled();
+  });
+
+  it("rebuilds when the previous digest came from a different pipeline version", async () => {
+    respond();
+    const ok = await buildDigest({ matter, records, docTexts, changeFeed: [], prev: null, cache: new MemoryCache(), log: () => {}, now });
+    const prev = { version: 1, ...ok, meta: { ...ok.meta, models: { ...ok.meta.models, pipeline: "old" } } } as Digest;
+    createMock.mockClear();
+    const again = await buildDigest({ matter, records, docTexts, changeFeed: [], prev, cache: new MemoryCache(), log: () => {}, now });
+    expect(again.meta.cached).toBeUndefined();
+  });
+
   it("rebuilds when a record changed, re-using the per-record extraction cache", async () => {
     respond();
     const cache = new MemoryCache();
