@@ -12,18 +12,21 @@ vi.mock("@/lib/digest", async () => {
   return { validateRefs: h.fakeValidateRefs, computeDeterministic: h.fakeComputeDeterministic, inputSetHash: h.fakeInputSetHash, diffSince: () => [] };
 });
 
-import { extractFactsDetailed, mergeFacts, selectFactRecords, type RawFact } from "./facts";
+import { extractFactsDetailed, FACTS_SCHEMA, mergeFacts, selectFactRecords, type RawFact } from "./facts";
 
 const noteOld = makeNote("1", "Insurance", "2024-03-20", "Carrier says liability limits are $100,000/$300,000 per the adjuster.");
 const noteNew = makeNote("2", "Coverage", "2026-09-05", "Adjuster confirmed in writing: liability limits $250,000/$500,000.");
 const noteLien = makeNote("3", "Lien", "2025-02-02", "State program asserted a lien of $9,400.");
 const noteChat = makeNote("4", "Call", "2025-03-01", "Client called to ask about her next appointment.");
+const noteSelf = makeNote("5", "Coverage", "2023-05-14", "The defendant is self-insured; there is no carrier and no declarations page.");
+const noteNf = makeNote("6", "No-fault", "2024-01-08", "Carrier confirms the client's no-fault benefits are exhausted.");
 const cfValue = makeCustomField("cv", "Estimated Case Value", "$600,000", 600000);
 const matter = makeMatter([cfValue]);
-const records = [matter, cfValue, noteOld, noteNew, noteLien, noteChat];
+const records = [matter, cfValue, noteOld, noteNew, noteLien, noteChat, noteSelf, noteNf];
 
 const fact = (p: Partial<RawFact> & { ref: RawFact["ref"]; kind: RawFact["kind"] }): RawFact => ({
-  amount: null, perPerson: null, perAccident: null, coverageKind: null, carrier: null, holder: null, confirmed: null, date: null, ...p,
+  amount: null, perPerson: null, perAccident: null, coverageKind: null, carrier: null, holder: null, confirmed: null,
+  exhausted: null, selfInsured: null, date: null, ...p,
 });
 
 describe("selectFactRecords", () => {
@@ -67,6 +70,30 @@ describe("mergeFacts", () => {
     expect(r.facts.conflicts[0].refs.map((x) => x.clioId)).toEqual(["2", "1"]);
   });
 
+  it("marks a layer exhausted even when the exhaustion note states no number", () => {
+    const r = mergeFacts([
+      fact({ kind: "coverage", coverageKind: "No-fault/PIP", amount: 50000, ref: { id: "note:1", quote: "$100,000" } }), // dropped: number not in quote
+      fact({ kind: "coverage", coverageKind: "No-fault/PIP", exhausted: true, ref: { id: "note:6", quote: "no-fault benefits are exhausted" } }),
+    ], records);
+    expect(r.facts.coverage).toEqual([expect.objectContaining({ kind: "No-fault/PIP", exhausted: true })]);
+  });
+
+  it("keeps the latest numeric limit and flags an older self-insured statement as a conflict", () => {
+    const r = mergeFacts([
+      fact({ kind: "coverage", coverageKind: "BI", selfInsured: true, ref: { id: "note:5", quote: "self-insured; there is no carrier" } }),
+      fact({ kind: "coverage", coverageKind: "BI", perPerson: 250000, perAccident: 500000, ref: { id: "note:2", quote: "$250,000/$500,000" } }),
+    ], records);
+    expect(r.facts.coverage[0]).toMatchObject({ kind: "BI", perPerson: 250000 });
+    expect(r.facts.conflicts).toEqual([expect.objectContaining({ field: "coverage" })]);
+    expect(r.facts.conflicts[0].refs.map((x) => x.clioId)).toEqual(["2", "5"]);
+  });
+
+  it("drops a coverage fact with no number unless it states exhaustion or self-insurance", () => {
+    const r = mergeFacts([fact({ kind: "coverage", coverageKind: "BI", ref: { id: "note:5", quote: "self-insured" } })], records);
+    expect(r.facts.coverage).toHaveLength(0);
+    expect(r.droppedRefs).toBe(1);
+  });
+
   it("attorney custom field beats a quoted note for case value", () => {
     const r = mergeFacts([
       fact({ kind: "case_value", amount: 500000, date: "2026-09-30", ref: { id: "note:2", quote: "$250,000" } }), // number mismatch -> dropped
@@ -75,6 +102,18 @@ describe("mergeFacts", () => {
     expect(r.facts.caseValue?.amount).toBe(600000);
     expect(r.facts.caseValue?.ref.sourceType).toBe("custom_field");
     expect(r.droppedRefs).toBe(1);
+  });
+});
+
+describe("FACTS_SCHEMA", () => {
+  it("never puts an enum under a nullable type array (the API rejects that)", () => {
+    const walk = (n: unknown): void => {
+      if (!n || typeof n !== "object") return;
+      const o = n as Record<string, unknown>;
+      if (Array.isArray(o.type) && "enum" in o) throw new Error(`enum with type array: ${JSON.stringify(o)}`);
+      Object.values(o).forEach(walk);
+    };
+    expect(() => walk(FACTS_SCHEMA)).not.toThrow();
   });
 });
 
