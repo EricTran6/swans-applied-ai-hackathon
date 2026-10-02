@@ -10,7 +10,8 @@ vi.mock("@anthropic-ai/sdk", () => {
 });
 vi.mock("@/lib/digest", async () => {
   const h = await import("./__tests__/helpers");
-  return { validateRefs: h.fakeValidateRefs, computeDeterministic: h.fakeComputeDeterministic, inputSetHash: h.fakeInputSetHash, diffSince: () => [] };
+  return { validateRefs: h.fakeValidateRefs, computeDeterministic: h.fakeComputeDeterministic, inputSetHash: h.fakeInputSetHash, diffSince: () => [],
+    DIGEST_CORE_VERSION: "core-test" };
 });
 
 import { buildDigest, markUnextracted } from "./index";

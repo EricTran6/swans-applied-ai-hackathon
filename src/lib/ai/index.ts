@@ -1,7 +1,7 @@
 // AI digestion pipeline (owner T03). Claude is used for extraction and synthesis only; all math,
 // ranking and lanes come from src/lib/digest. Every ref is validated; every call's cost is logged.
 import type { AiCall, ChangeEntry, ClioRecord, Digest, DocumentText, ExtractionCache, Matter } from "@/lib/types";
-import { computeDeterministic, inputSetHash } from "@/lib/digest";
+import { computeDeterministic, DIGEST_CORE_VERSION, inputSetHash } from "@/lib/digest";
 import { models } from "./client";
 import { extractFactsDetailed, FACTS_EXTRACTOR_VERSION } from "./facts";
 import { extractInjuriesDetailed, INJURY_EXTRACTOR_VERSION } from "./injuries";
@@ -12,7 +12,7 @@ export { extractInjuries, extractInjuriesDetailed, chooseInjuryDocuments, INJURY
 export { synthesize, synthesizeDetailed, SYNTH_VERSION } from "./synthesize";
 export { models, priceUsd, PRICES } from "./client";
 
-export const PIPELINE_VERSION = `${FACTS_EXTRACTOR_VERSION}+${INJURY_EXTRACTOR_VERSION}+${SYNTH_VERSION}`;
+export const PIPELINE_VERSION = `${FACTS_EXTRACTOR_VERSION}+${INJURY_EXTRACTOR_VERSION}+${SYNTH_VERSION}+${DIGEST_CORE_VERSION}`;
 
 // Warnings that mean a stage did not run (transient); such a digest must not be served from cache.
 const TRANSIENT_FAILURE = /API error|model refused|output truncated|unparseable JSON|no output/;
