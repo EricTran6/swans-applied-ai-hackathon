@@ -6,7 +6,7 @@ import type {
   Communication, ShareCandidate, ShareCategory, SharePreset, Task, TimelineEvent,
 } from "@/lib/types";
 import { providerFor, providers, roleLabel } from "./scope";
-import { humanizeFilename, isProviderSafe, templateNeed, templateUpdate } from "./templates";
+import { humanizeFilename, isProviderSafe, templateCorrespondence, templateNeed, templateUpdate } from "./templates";
 
 export const DEFAULT_PRESET: SharePreset = {
   allow: ["status", "stage", "coverage", "appointments", "requests", "own_records", "own_bill", "updates"],
@@ -55,18 +55,20 @@ export function isKnownCategory(c: string): c is ShareCategory {
 
 const dateOnly = (s: string | null | undefined): string | null => (s ? s.slice(0, 10) : null);
 
-function customFieldCategory(name: string): ShareCategory {
+/**
+ * Bucket a matter custom field by its name. Generic PI vocabulary only; a name that matches nothing
+ * returns null and the field is excluded entirely (fail closed, never "internal_comms" by default).
+ */
+export function customFieldCategory(name: string): ShareCategory | null {
   const n = name.toLowerCase();
   if (/value|rationale|specials|settle|offer|demand/.test(n)) return "valuation";
   if (/lien|medicaid|medicare|health insurance|erisa/.test(n)) return "other_liens";
-  if (/wage|income|employ|prior|ssn|social|birth|dob|address|phone|email|incident/.test(n)) return "client_pii";
   if (/liabilit|fault|negligen/.test(n)) return "liability";
-  if (/claim number|claim no|policy number|adjuster/.test(n)) return "internal_comms";
+  if (/incident|accident|location|claim|wage|income|employ|prior|injur|ssn|social|birth|dob|address|phone|email/.test(n)) return "client_pii";
   if (/summary|strategy|assessment|notes?$/.test(n)) return "attorney_notes";
-  if (/limits? confirmed|coverage confirmed/.test(n)) return "coverage";
-  if (/policy limits|coverage|carrier/.test(n)) return "coverage";
+  if (/limits? confirmed|coverage confirmed|policy limits|coverage|carrier/.test(n)) return "coverage";
   if (/treatment status|treating/.test(n)) return "status";
-  return "internal_comms";
+  return null;
 }
 
 function documentFolderKind(doc: Document): "bill" | "record" | "pii" | "liability" | "unknown" {
@@ -153,9 +155,9 @@ export function buildItems(d: Digest, records: ClioRecord[], recipientContactId:
       case "communication": {
         const c = r as Communication;
         const pid = providerFor(`${c.subject}`, provs, [...c.senders, ...c.receivers]);
-        if (pid) {
-          const outbound = c.receivers.some((p) => p.contactId === pid);
-          const text = outbound ? "Request sent to your office" : "Correspondence received from your office";
+        const outbound = !!pid && c.receivers.some((p) => p.contactId === pid);
+        const text = pid ? templateCorrespondence(c.subject, outbound, c.occurredAt) : null;
+        if (pid && text) {
           items.push(mk(`communication:${c.clioId}`, "updates", `${outbound ? "To" : "From"} ${provName(pid)}: ${dateOnly(c.occurredAt)}`, text, pid,
             { kind: "update", date: dateOnly(c.occurredAt) ?? "", text }));
         } else {
@@ -212,13 +214,18 @@ export function buildItems(d: Digest, records: ClioRecord[], recipientContactId:
       }
       case "expense": {
         const e = r as Expense;
-        if (e.kind === "firm") items.push(mk(`expense:${e.clioId}`, "firm_expenses", "Firm expense", "Firm case expense", null, { kind: "none" }));
+        if (e.kind === "firm") {
+          // description + date for the attorney's audit trail only; firm expenses never render in the provider view
+          const desc = e.description.trim().slice(0, 80) || e.category || "Firm case expense";
+          items.push(mk(`expense:${e.clioId}`, "firm_expenses", `Firm expense: ${desc}`, `${dateOnly(e.date) ?? "undated"} · firm case expense (never shared)`, null, { kind: "none" }));
+        }
         break; // provider_bill rows handled above
       }
       case "custom_field": {
         const cf = r as CustomFieldValue;
         if (/hipaa/i.test(cf.name)) break; // gate, not a candidate
         const cat = customFieldCategory(cf.name);
+        if (cat === null) break; // unknown field: excluded entirely (fail closed)
         if (cat === "status" || cat === "coverage") break; // already represented by status:alive / kpi:coverage
         items.push(mk(`custom_field:${cf.clioId}`, cat, `Field: ${cf.name}`, "Matter field (withheld)", null, { kind: "none" }));
         break;
