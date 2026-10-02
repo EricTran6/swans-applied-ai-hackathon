@@ -4,7 +4,7 @@ import type { TimelineEvent } from "@/lib/types";
 import { useEvidence } from "@/components/evidence";
 import { cn } from "@/lib/utils";
 import { formatDate, stripLayout, type StripBox } from "./lib";
-import { Empty, Panel, itemKey, useNow } from "./primitives";
+import { Empty, NewBadge, Panel, itemKey, useNow } from "./primitives";
 
 export const CATEGORY_COLOR: Record<TimelineEvent["category"], string> = {
   incident: "var(--danger)", treatment: "var(--ok)", legal: "var(--navy)",
@@ -19,6 +19,8 @@ const PAD = 40;
 const LABEL_H = 36;
 const ROW = 44;
 const TIP_W = 280;
+/** Label width estimate per char at the 12px mono / 13px title sizes (lib default 7 assumed 11px). */
+const CHAR_W = 7.5;
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -46,7 +48,9 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
 
   const scrolls = hostW > 0 && hostW < MIN_W;
   const W = hostW > 0 ? Math.max(hostW, scrolls ? MIN_W : 0) : MIN_W;
-  const layout = stripLayout(milestones, { width: W, pad: PAD, now: now ?? undefined, rowsAbove: 3, rowsBelow: 2 });
+  const layout = stripLayout(milestones, { width: W, pad: PAD, now: now ?? undefined, rowsAbove: 3, rowsBelow: 2, charW: CHAR_W });
+  const isNewEvent = (e: TimelineEvent) => { const r = e.refs[0]; return r ? !!newKeys?.has(itemKey(r)) : false; };
+  const anyNew = milestones.some(isNewEvent);
 
   // Newest end in view first when the strip has to scroll.
   useEffect(() => {
@@ -68,11 +72,21 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
   return (
     <Panel
       title="Story so far"
-      aside={`${milestones.length} milestones · click a dot for its source`}
+      aside={
+        <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+          {anyNew && (
+            <span className="inline-flex items-center gap-1 text-new">
+              <span aria-hidden className="size-2.5 rounded-full border border-white bg-new ring-1 ring-new/40" /> New since last view
+              <span aria-hidden className="text-ink-3">·</span>
+            </span>
+          )}
+          {milestones.length} milestones · click a dot for its source
+        </span>
+      }
       className="relative left-1/2 w-[calc(100vw-48px)] -translate-x-1/2"
     >
       {milestones.length === 0 ? (
-        <Empty>No milestones yet.</Empty>
+        <Empty hint="Milestones appear once the digest finds dated events in Clio.">No milestones yet.</Empty>
       ) : (
         <div ref={hostRef} className="w-full">
           <div ref={scrollRef} className={cn("w-full", scrolls ? "overflow-x-auto" : "overflow-visible")}>
@@ -92,7 +106,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
               ))}
 
               {layout.ticks.map((t) => (
-                <span key={`tk-${t.label}`} className="absolute -translate-x-1/2 font-mono text-xs text-ink-2" style={{ left: t.x, top: axisY + 12 }}>
+                <span key={`tk-${t.label}`} className="tabular absolute -translate-x-1/2 font-mono text-xs leading-4 whitespace-nowrap text-ink-2" style={{ left: t.x, top: axisY + 12 }}>
                   <span aria-hidden className="absolute -top-3 left-1/2 h-1.5 w-px bg-ink-2" />
                   {t.label}
                 </span>
@@ -118,7 +132,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
               {layout.clusters.map((c, i) => {
                 const first = c.events[0]!;
                 const multi = c.events.length > 1;
-                const isNew = c.events.some((e) => { const r = e.refs[0]; return r ? newKeys?.has(itemKey(r)) : false; });
+                const isNew = c.events.some(isNewEvent);
                 const color = CATEGORY_COLOR[first.category];
                 const tipLeft = Math.min(Math.max(c.x - TIP_W / 2, 0), Math.max(0, W - TIP_W)) - c.x;
                 const showTip = pinned === i;
@@ -126,9 +140,10 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
                   if (!multi && c.label && first.refs[0]) open(first.refs[0]);
                   else setPinned(showTip ? null : i);
                 };
-                const summary = multi
+                const summary = (multi
                   ? `${c.events.length} milestones from ${formatDate(first.date)}`
-                  : `${first.title}, ${formatDate(first.date)}, ${CATEGORY_LABEL[first.category]}${first.derivation === "inferred" ? ", date inferred" : ""}`;
+                  : `${first.title}, ${formatDate(first.date)}, ${CATEGORY_LABEL[first.category]}${first.derivation === "inferred" ? ", date inferred" : ""}`)
+                  + (isNew ? ", new since last view" : "");
                 const hasTip = multi || !c.label;
                 return (
                   <div
@@ -163,7 +178,7 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
                       >
                         {multi ? <span className="text-xs leading-none font-bold text-ink">{c.events.length}</span> : <span className="size-1.5 rounded-full" style={{ background: color }} />}
                       </span>
-                      {isNew && <span aria-hidden className="absolute top-0 right-0 size-2.5 rounded-full border border-white bg-info" />}
+                      {isNew && <span aria-hidden className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border border-white bg-new ring-1 ring-new/40" />}
                     </button>
                     {hasTip && (
                       <ul
@@ -179,11 +194,14 @@ export function StoryStrip({ timeline, newKeys }: { timeline: TimelineEvent[]; n
                               type="button"
                               disabled={!e.refs[0]}
                               onClick={() => e.refs[0] && open(e.refs[0])}
-                              className="flex w-full items-start gap-2 rounded px-2 py-1.5 text-left hover:bg-paper focus-visible:bg-paper focus-visible:outline-2 focus-visible:outline-navy"
+                              className="flex min-h-6 w-full cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-left hover:bg-paper disabled:cursor-default focus-visible:bg-paper focus-visible:outline-2 focus-visible:outline-navy"
                             >
                               <span aria-hidden className="mt-1 size-2 shrink-0 rounded-full" style={{ background: CATEGORY_COLOR[e.category] }} />
                               <span className="min-w-0">
-                                <span className="block font-mono text-xs text-ink-2">{formatDate(e.date)} · {CATEGORY_LABEL[e.category]}</span>
+                                <span className="flex items-center gap-1.5 font-mono text-xs text-ink-2">
+                                  {formatDate(e.date)} · {CATEGORY_LABEL[e.category]}
+                                  {isNewEvent(e) && <NewBadge className="font-sans" />}
+                                </span>
                                 <span className="line-clamp-2 text-[13px] font-medium text-ink" title={e.title}>{e.title}</span>
                               </span>
                             </button>

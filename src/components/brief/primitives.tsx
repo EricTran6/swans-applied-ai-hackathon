@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SourceRef } from "@/lib/types";
 import { SourceChip } from "@/components/evidence";
@@ -29,7 +30,7 @@ export function Refs({ refs, max = 3, className }: { refs: SourceRef[]; max?: nu
   const overflow = list.length - shown.length;
   const last = shown.length - 1;
   return (
-    <span className={cn("inline-flex max-w-full flex-wrap items-center gap-1 align-middle [&_button]:min-h-[22px]", className)}>
+    <span className={cn("inline-flex max-w-full flex-wrap items-center gap-1 align-middle", className)}>
       {shown.slice(0, last).map((r, i) => <SourceChip key={`${r.drawerKey}-${i}`} sourceRef={r} label={chipLabel(r)} />)}
       {/* the overflow count stays glued to the final chip so it never dangles on its own */}
       <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -92,8 +93,25 @@ export function Avatar({ initials, url, size = 56 }: { initials: string; url: st
   );
 }
 
-export function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="py-3 text-sm text-ink-2">{children}</p>;
+export function Empty({ children, hint }: { children: React.ReactNode; hint?: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-dashed border-line p-4 text-sm text-ink-2">
+      <Inbox className="mt-0.5 size-4 shrink-0 text-ink-3" aria-hidden />
+      <div className="min-w-0 space-y-0.5">
+        <p>{children}</p>
+        {hint && <p className="text-xs text-ink-3">{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
+/** Persistent "changed since last view" marker; the word carries the meaning, the color is secondary. */
+export function NewBadge({ className }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center rounded border border-new/30 bg-new-bg px-1.5 text-xs leading-5 font-semibold text-new", className)}>
+      New
+    </span>
+  );
 }
 
 /** Client clock, null during SSR so server and client markup agree. */

@@ -131,7 +131,7 @@ export function MatterBrief({ matterId }: { matterId: string }) {
         onClick={refresh}
         disabled={busy}
         className={cn(
-          "inline-flex h-8 items-center gap-1.5 rounded-lg bg-navy px-3 text-sm text-white hover:bg-navy/90 disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy",
+          "inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-ink hover:bg-paper disabled:cursor-not-allowed disabled:opacity-70 sm:h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy",
         )}
       >
         {busy ? <LoaderCircle className="size-3.5 motion-safe:animate-spin" aria-hidden /> : <RefreshCw className="size-3.5" aria-hidden />}

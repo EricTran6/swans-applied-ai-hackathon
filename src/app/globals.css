@@ -197,7 +197,7 @@
   to { opacity: 1; transform: none; }
 }
 @keyframes brief-glow {
-  from { background-color: var(--info-bg); }
+  from { background-color: var(--new-bg); }
   to { background-color: transparent; }
 }
 .brief-fade-up { animation: brief-fade-up 400ms ease-out both; }

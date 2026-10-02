@@ -68,8 +68,8 @@ export function EvidenceDrawer({ sourceRef, onClose }: { sourceRef: SourceRef | 
             )}
 
             {clioUrl && (
-              <a href={clioUrl} target="_blank" rel="noreferrer" className="mt-auto inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
-                <ExternalLink className="size-4" /> Open matter in Clio
+              <a href={clioUrl} target="_blank" rel="noreferrer" className="mt-auto inline-flex min-h-10 cursor-pointer items-center gap-1.5 self-start rounded-lg border border-line px-3 text-sm text-primary hover:bg-paper focus-visible:outline-2 focus-visible:outline-ring">
+                <ExternalLink className="size-4" aria-hidden /> Open matter in Clio
               </a>
             )}
           </>

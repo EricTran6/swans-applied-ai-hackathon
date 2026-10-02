@@ -25,7 +25,7 @@ export function WarningsBanner({ warnings, onRefresh }: { warnings: string[]; on
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-controls="warnings-details"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs underline-offset-2 hover:underline"
+          className="inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-xs underline-offset-2 hover:underline focus-visible:outline-2"
         >
           Details <ChevronDown className={cn("size-3.5 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
         </button>
@@ -33,7 +33,7 @@ export function WarningsBanner({ warnings, onRefresh }: { warnings: string[]; on
           <button
             type="button"
             onClick={onRefresh}
-            className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-lg bg-navy px-3 text-sm font-medium text-white hover:bg-navy/90"
+            className="ml-auto inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-navy px-3 text-sm font-medium text-white hover:bg-navy/90 focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <RefreshCw className="size-3.5" aria-hidden /> Refresh
           </button>
@@ -55,7 +55,7 @@ export function CitedBrief({ brief, openQuestions }: { brief: Claim[]; openQuest
   return (
     <Panel title="Brief" aside="AI-written · every sentence cited">
       {claims.length === 0 ? (
-        <Empty>No brief yet. Refresh to digest this matter.</Empty>
+        <Empty hint="Every sentence will carry a source chip you can open.">No brief yet. Refresh to digest this matter.</Empty>
       ) : (
         <p className="font-serif text-[17px] leading-relaxed text-ink">
           {claims.map((c, i) => (
