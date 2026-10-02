@@ -94,7 +94,9 @@ async function main() {
   if (digest.meta.warnings.length) { console.log("\nWARNINGS"); for (const w of digest.meta.warnings) console.log(`  ! ${w}`); }
   console.log(`\nmodels: ${JSON.stringify(digest.meta.models)}`);
   console.log(`dropped refs: ${digest.meta.droppedRefs}, dropped claims: ${digest.meta.droppedClaims}`);
-  console.log(`cost this build: $${digest.meta.costUsd.toFixed(4)}   time: ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+  const cost = built.meta.cached
+    ? `$0.0000 (cached; original build $${digest.meta.costUsd.toFixed(4)})` : `$${digest.meta.costUsd.toFixed(4)}`;
+  console.log(`cost this build: ${cost}   time: ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });
