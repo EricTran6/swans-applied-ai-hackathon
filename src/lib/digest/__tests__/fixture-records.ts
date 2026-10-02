@@ -15,7 +15,7 @@ const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v)).dige
 const unescape = (s: string) => s.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 
-function base(sourceType: ClioRecord["sourceType"], raw: any, matterId: string, extra: {
+function base<S extends ClioRecord["sourceType"]>(sourceType: S, raw: any, matterId: string, extra: {
   sourceDate: string | null; title: string; bodyText: string }) {
   const clioId = String(raw.id);
   return {

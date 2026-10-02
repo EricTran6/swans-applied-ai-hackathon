@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeDeterministic, diffSince, inputSetHash, validateRefs } from "@/lib/digest";
+import { computeDeterministic, dateDerivation, diffSince, inputSetHash, validateRefs } from "@/lib/digest";
 import type { ClioRecord, DocumentText, Note } from "@/lib/types";
 import { fixtureFacts, fixtureRecords } from "./fixture-records";
 
@@ -46,6 +46,7 @@ describe("KPIs", () => {
     const k = kpi(build().d, "coverage");
     expect(k.value).toBe(250000);
     expect(k.conflicts?.length).toBe(1);
+    expect(k.status).toBe("ok"); // older self-insured note superseded by the later written confirmation
   });
   it("coverage: exhausted layers are excluded and UM above BI adds the excess", () => {
     const { matter, records } = fixtureRecords();
@@ -174,5 +175,14 @@ describe("hash and diff", () => {
     expect(c.every((e) => (e.sourceDate ?? "") >= "2026-09-20")).toBe(true);
     expect(c.map((e) => e.drawerKey)).toContain("communication:100040");
     expect(c.map((e) => e.drawerKey)).not.toContain("note:100024");
+  });
+});
+
+describe("dateDerivation", () => {
+  it("stated only when the date is in the quote", () => {
+    expect(dateDerivation("2024-06-04", { quote: "arthroscopy performed 2024-06-04", sourceDate: "2024-06-10" })).toBe("stated");
+    expect(dateDerivation("2024-06-04", { quote: "SURGERY ON JUNE 4, 2024", sourceDate: null })).toBe("stated");
+    expect(dateDerivation("2024-06-10", { quote: "recovery on track", sourceDate: "2024-06-10" })).toBe("clio-metadata");
+    expect(dateDerivation("2024-06-01", { quote: "recovery on track", sourceDate: "2024-06-10" })).toBe("inferred");
   });
 });
