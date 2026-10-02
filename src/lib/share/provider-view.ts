@@ -12,6 +12,7 @@ const DAY_MS = 86_400_000;
 export const STALE_BILL_DAYS = 90;
 export const ACTIVE_WINDOW_DAYS = 30;
 export const MAX_ATTORNEY_NOTE = 1000;
+export const MAX_PROVIDER_UPDATES = 5;
 
 const dateOnly = (s: string | null | undefined): string | null => (s ? s.slice(0, 10) : null);
 const daysBetween = (a: Date, b: Date) => Math.floor((a.getTime() - b.getTime()) / DAY_MS);
@@ -145,13 +146,17 @@ export function buildProviderShare(d: Digest, records: ClioRecord[], includedIds
     }))
     .filter((r) => isProviderSafe(r.name));
 
-  // updates (templated events + correspondence with this provider), newest first, deduped
+  // updates: every stage/coverage milestone (unscoped) plus the MAX_PROVIDER_UPDATES newest correspondence
+  // lines with this provider; newest first, deduped by text
   const seen = new Set<string>();
+  let ownCount = 0;
   const updates = chosen
-    .flatMap((i) => (i.payload.kind === "update" && (i.providerContactId == null || i.providerContactId === rid) ? [i.payload] : []))
+    .flatMap((i) => (i.payload.kind === "update" && (i.providerContactId == null || (rid && i.providerContactId === rid))
+      ? [{ ...i.payload, own: i.providerContactId != null }] : []))
     .filter((u) => u.date && isProviderSafe(u.text))
     .sort((a, b) => b.date.localeCompare(a.date))
     .filter((u) => { if (seen.has(u.text)) return false; seen.add(u.text); return true; }) // newest per text
+    .filter((u) => !u.own || ++ownCount <= MAX_PROVIDER_UPDATES)
     .map((u) => ({ date: u.date, text: u.text }));
 
   const view: ProviderView = {

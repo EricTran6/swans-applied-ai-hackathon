@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { ShareCategory, SharePreset } from "@/lib/types";
+import type { CustomFieldValue, Expense, ShareCategory, SharePreset } from "@/lib/types";
 import { buildCandidates, DEFAULT_PRESET, HARD_DENY, ID_COVERAGE_LIMITS, ID_OWN_BILL, isHardDeny, inScope } from "./index";
 import { fixtureDigest, fixtureProviders, fixtureRecords } from "./__tests__/fixture-records";
 
@@ -64,5 +64,40 @@ describe("buildCandidates", () => {
     const c0 = buildCandidates(d, records, null, DEFAULT_PRESET);
     expect(c0.filter((c) => c.providerContactId !== null).every((c) => !c.included)).toBe(true);
     expect(c0.find((c) => c.id === ID_OWN_BILL)).toBeUndefined();
+  });
+  it("matter custom fields bucket into client_pii or liability by name; unknown fields are excluded entirely", () => {
+    const fields = cands.filter((c) => c.id.startsWith("custom_field:"));
+    expect(fields.length).toBeGreaterThan(0);
+    for (const f of fields) expect(f.category).not.toBe("internal_comms");
+    const byName = (re: RegExp) => cands.find((c) => c.id.startsWith("custom_field:") && re.test(c.label));
+    expect(byName(/location/i)?.category).toBe("client_pii");
+    expect(byName(/claim number/i)?.category).toBe("client_pii");
+    expect(byName(/incident/i)?.category).toBe("client_pii");
+    expect(byName(/wage/i)?.category).toBe("client_pii");
+    expect(byName(/prior/i)?.category).toBe("client_pii");
+    expect(byName(/liability/i)?.category).toBe("liability");
+    const cf = records.find((r): r is CustomFieldValue => r.sourceType === "custom_field")!;
+    const withUnknown = [...records, { ...cf, clioId: "cf-unknown", name: "Parking Validation Code", display: "Z9", value: "Z9" }];
+    expect(buildCandidates(d, withUnknown, rid, DEFAULT_PRESET).find((c) => c.id === "custom_field:cf-unknown")).toBeUndefined();
+    for (const f of fields) expect(f.included).toBe(false);
+  });
+  it("firm expenses carry description and date for audit and are never included", () => {
+    const firm = records.filter((r): r is Expense => r.sourceType === "expense" && r.kind === "firm");
+    expect(firm.length).toBeGreaterThan(0);
+    for (const e of firm) {
+      const c = cands.find((x) => x.id === `expense:${e.clioId}`)!;
+      expect(c.category).toBe("firm_expenses");
+      expect(c.label).toContain(e.description.slice(0, 20));
+      expect(c.preview).toContain(e.date.slice(0, 10));
+      expect(c.included).toBe(false);
+    }
+  });
+  it("correspondence with the recipient becomes a dated status line, not a bare template", () => {
+    const own = cands.filter((c) => c.id.startsWith("communication:") && c.providerContactId === rid);
+    expect(own.length).toBeGreaterThan(0);
+    for (const c of own) {
+      expect(c.category).toBe("updates");
+      expect(c.preview).toMatch(/(sent|received) [A-Z][a-z]{2} \d{1,2}, \d{4}$/);
+    }
   });
 });

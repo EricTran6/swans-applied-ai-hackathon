@@ -50,10 +50,42 @@ export function providerFor(text: string, provs: Contact[], parties: Party[] = [
   return best && !tie ? best.id : null;
 }
 
-/** Short role label for a provider: "Treating provider, physical therapy" -> "Physical therapy". */
+export const MAX_ROLE_LABEL = 60;
+
+/** Index of the first comma outside parentheses, or -1. */
+function topLevelComma(s: string): number {
+  let depth = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    else if (ch === "," && depth === 0) return i;
+  }
+  return -1;
+}
+
+/** Drop any unclosed "(" group (and everything after it) and any stray ")". */
+function balanceParens(s: string): string {
+  let out = "";
+  const opens: number[] = [];
+  for (const ch of s) {
+    if (ch === "(") opens.push(out.length);
+    else if (ch === ")") { if (opens.length === 0) continue; opens.pop(); }
+    out += ch;
+  }
+  return opens.length ? out.slice(0, opens[0]) : out;
+}
+
+/**
+ * Short role label for a provider: "Treating provider, physical therapy" -> "Physical therapy".
+ * Never splits inside parentheses, keeps them balanced, and caps at MAX_ROLE_LABEL characters.
+ */
 export function roleLabel(contact: Contact | undefined): string {
-  const role = contact?.role ?? "";
-  const after = role.includes(",") ? role.slice(role.indexOf(",") + 1) : role.replace(/treating provider/i, "");
-  const s = after.trim();
+  let s = (contact?.role ?? "").replace(/treating provider/i, "");
+  const comma = topLevelComma(s);
+  if (comma >= 0) s = s.slice(comma + 1);
+  s = s.trim();
+  if (s.length > MAX_ROLE_LABEL) s = s.slice(0, MAX_ROLE_LABEL);
+  s = balanceParens(s).trim().replace(/[\s,(\-–]+$/, "").trim();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : "Treating provider";
 }

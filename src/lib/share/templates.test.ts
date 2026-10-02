@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { humanizeFilename, isProviderSafe, templateNeed, templateUpdate, providerFor } from "./index";
+import { formatShortDate, templateCorrespondence } from "./templates";
 import { fixtureProviders, fixtureRecords } from "./__tests__/fixture-records";
 
 describe("templateNeed rewrites internal task text", () => {
@@ -43,5 +44,24 @@ describe("helpers", () => {
     expect(providerFor("Prepare for compliance conference", provs)).toBeNull();
     expect(providerFor(provs.map((p) => p.name).join(" and "), provs)).toBeNull();
     expect(providerFor("anything", provs, [{ contactId: pt.clioId, name: pt.name, kind: "Company" }])).toBe(pt.clioId);
+  });
+});
+
+describe("templateCorrespondence", () => {
+  it("formats dates without timezone drift", () => {
+    expect(formatShortDate("2023-07-04")).toBe("Jul 4, 2023");
+    expect(formatShortDate("2023-12-17T23:30:00-08:00")).toBe("Dec 17, 2023");
+    expect(formatShortDate("")).toBeNull();
+    expect(formatShortDate("not a date")).toBeNull();
+  });
+  it("turns correspondence into a dated status line, never echoing the subject", () => {
+    expect(templateCorrespondence("Records request", true, "2023-07-04")).toBe("Records request sent Jul 4, 2023");
+    expect(templateCorrespondence("RE: Records request", true, "2023-08-01")).toBe("Records request sent Aug 1, 2023");
+    expect(templateCorrespondence("Ledger request", true, "2026-09-10")).toBe("Itemized ledger request sent Sep 10, 2026");
+    expect(templateCorrespondence("RE: records enclosed", false, "2023-12-17")).toBe("Your records received Dec 17, 2023");
+    expect(templateCorrespondence("Invoice attached", false, "2023-12-17")).toBe("Your bill received Dec 17, 2023");
+    expect(templateCorrespondence("Call re: settlement posture $5,000", true, "2023-12-17")).toBe("Request sent to your office Dec 17, 2023");
+    expect(templateCorrespondence("Call re: settlement posture $5,000", false, "2023-12-17")).toBe("Correspondence received from your office Dec 17, 2023");
+    expect(templateCorrespondence("Records request", true, "")).toBeNull();
   });
 });

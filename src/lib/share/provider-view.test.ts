@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Document, Note } from "@/lib/types";
+import type { CustomFieldValue, Document, Expense, Note } from "@/lib/types";
 import { buildProviderShare } from "./provider-view";
 import { buildCandidates, buildProviderView, DEFAULT_PRESET, ID_COVERAGE, ID_COVERAGE_LIMITS, ID_OWN_BILL, ID_STATUS, stageLabel, clientDisplayName } from "./index";
 import { fixtureDigest, fixtureProviders, fixtureRecords, FIXTURE_NOW } from "./__tests__/fixture-records";
@@ -17,6 +17,9 @@ describe("ProviderView leak tests (every fixture provider)", () => {
   const client = d.header.clientName; // "Jane Doe" in the synthetic fixture
   const caseValue = d.kpis.find((k) => k.key === "case_value")!.value!;
   const lienAmounts = d.valueWaterfall.filter((w) => /lien/i.test(w.label)).map((w) => Math.abs(w.amount));
+  const customFields = records.filter((r): r is CustomFieldValue => r.sourceType === "custom_field");
+  const firmExpenses = records.filter((r): r is Expense => r.sourceType === "expense" && r.kind === "firm");
+  const liabilityDocs = records.filter((r): r is Document => r.sourceType === "document" && /plead|demand|settle|expert|\bime\b/i.test(`${r.folder} ${r.filename}`)).map((r) => r.filename);
 
   for (const p of provs) {
     for (const [label, ids] of [["default inclusion", defaultIds(p.clioId)], ["EVERY candidate id forced in", allIds(p.clioId)]] as const) {
@@ -42,6 +45,18 @@ describe("ProviderView leak tests (every fixture provider)", () => {
         }
         expect(json).not.toContain(client);
         expect(v.clientDisplayName).toBe("Jane D.");
+        // matter custom field values (client PII, liability, valuation, claim/location) never reach the view
+        for (const cf of customFields) {
+          if (/^(true|false|yes|no)$/i.test(cf.display) || cf.display.length < 4) continue;
+          if (/limits? confirmed|coverage confirmed|hipaa|treatment status/i.test(cf.name)) continue;
+          expect(json).not.toContain(cf.display);
+        }
+        // firm expenses (description and amount) and liability/pleading documents never reach the view
+        for (const e of firmExpenses) {
+          expect(json).not.toContain(e.description.split(/[.:]/)[0].trim());
+          expect(json).not.toMatch(new RegExp(`\\b${e.amount}\\b`));
+        }
+        for (const doc of liabilityDocs) expect(json.toLowerCase()).not.toContain(doc.replace(/\.pdf$/i, "").replace(/[-_]+/g, " ").split("__").pop()!);
         // no Clio ids / urls / drawer keys
         expect(json).not.toMatch(/clioId|drawerKey|clioUrl|app\.clio\.com/);
         // dollars only in coverage layers (toggled on here) and own bill
@@ -143,6 +158,33 @@ describe("coverage, status, stage, updates, care team", () => {
     const v = buildProviderView(dup, records, cands.map((c) => c.id), { label: "x", contactId: rid }, null, FIXTURE_NOW);
     expect(v.updates.filter((u) => u.text === "Lawsuit filed")).toEqual([{ date: "2025-04-01", text: "Lawsuit filed" }]);
   });
+  it("correspondence updates carry their date in the text and are capped at the 5 newest per provider", () => {
+    const comm = records.find((r) => r.sourceType === "communication" && r.senders.length)!;
+    const pid = provs.find((p) => p.clioId !== rid)!; // a provider other than the default rid, to prove scoping too
+    const many = Array.from({ length: 8 }, (_, i) => ({
+      ...comm, clioId: `synthetic-${i}`, subject: "Records request", occurredAt: `2025-0${i + 1}-15T10:00:00Z`, sourceDate: `2025-0${i + 1}-15`,
+      senders: [{ contactId: null, name: "Staff", kind: "User" as const }], receivers: [{ contactId: pid.clioId, name: pid.name, kind: "Company" as const }],
+    }));
+    const withMany = [...records, ...many];
+    const cands = buildCandidates(d, withMany, pid.clioId, DEFAULT_PRESET);
+    const ids = cands.filter((c) => c.category === "updates").map((c) => c.id);
+    const v = buildProviderView(d, withMany, ids, { label: "x", contactId: pid.clioId }, null, FIXTURE_NOW);
+    const mine = v.updates.filter((u) => /^Records request sent /.test(u.text));
+    expect(mine.length).toBe(5);
+    // the 5 newest of ALL correspondence with this provider (fixture rows plus the synthetic ones), newest first
+    const scopedDates = cands.filter((c) => c.category === "updates" && c.providerContactId === pid.clioId).map((c) => c.label.slice(-10)).sort().reverse();
+    expect(scopedDates.length).toBeGreaterThan(5);
+    expect(mine.map((u) => u.date)).toEqual(scopedDates.slice(0, 5));
+    expect(mine.some((u) => u.text === "Records request sent Aug 15, 2025")).toBe(true);
+    expect(mine.some((u) => u.date === "2025-01-15")).toBe(false);
+    // stage/coverage updates from the timeline survive the cap
+    expect(v.updates.map((u) => u.text)).toContain("Lawsuit filed");
+    expect(v.updates.map((u) => u.text)).toContain("Insurance coverage confirmed in writing");
+    for (const u of v.updates) expect(u.text).not.toMatch(/Request sent to your office$/);
+    // the other recipient never sees them
+    const other = buildProviderView(d, withMany, buildCandidates(d, withMany, rid, DEFAULT_PRESET).map((c) => c.id), { label: "x", contactId: rid }, null, FIXTURE_NOW);
+    expect(other.updates.some((u) => /^Records request sent (Apr|May|Jun|Jul|Aug) /.test(u.text))).toBe(false);
+  });
   it("stage maps to the coarse label", () => {
     expect(view(rid, defaultIds(rid)).stage.label).toBe("In litigation");
     expect(stageLabel("treatment", "Open")).toBe("Treating");
@@ -177,6 +219,20 @@ describe("coverage, status, stage, updates, care team", () => {
     for (const [folder, filename] of [[bop.folder ?? "02 Pleadings", bop.filename], ["06 Demand", "06-demand__demand-letter.pdf"], ["07 Settlement", "07-settlement__release.pdf"]] as const) {
       const withDoc = [...records, { ...bop, folder, filename, clioId: d.injuries[0].refs[0].clioId }];
       expect(buildCandidates(d, withDoc, rid, DEFAULT_PRESET).some((c) => c.id.startsWith("finding:"))).toBe(false);
+    }
+  });
+  it("pins Step 0.4: a pleading (bill of particulars) never sources a provider finding, even with every id forced", () => {
+    const bop = records.find((r): r is Document => r.sourceType === "document" && /particulars/i.test(r.filename))!;
+    expect(bop.folder).toMatch(/plead/i);
+    const cited = d.injuries.map((inj) => inj.refs[0].clioId);
+    const withBop = [...records, ...cited.map((id) => ({ ...bop, clioId: id }))];
+    for (const p of provs) {
+      const cands = buildCandidates(d, withBop, p.clioId, DEFAULT_PRESET);
+      expect(cands.some((c) => c.id.startsWith("finding:"))).toBe(false);
+      const forced = [...cands.map((c) => c.id), ...d.injuries.map((_, i) => `finding:${i}`)];
+      const v = buildProviderView(d, withBop, forced, { label: "x", contactId: p.clioId }, null, FIXTURE_NOW);
+      expect(v.findings).toBeUndefined();
+      expect(JSON.stringify(v)).not.toMatch(/particulars|pleading/i);
     }
   });
   it("care team entries whose name or role trips the leak filter are dropped", () => {

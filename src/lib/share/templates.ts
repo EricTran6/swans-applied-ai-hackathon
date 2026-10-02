@@ -49,6 +49,36 @@ export function templateUpdate(title: string, category: string): string | null {
   return null;
 }
 
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2023-07-04" (or any ISO string starting with a date) -> "Jul 4, 2023"; null when there is no date. No timezone math. */
+export function formatShortDate(iso: string | null | undefined): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? "");
+  if (!m) return null;
+  const mon = SHORT_MONTHS[Number(m[2]) - 1];
+  return mon ? `${mon} ${Number(m[3])}, ${m[1]}` : null;
+}
+
+/**
+ * Dated status line for correspondence with the recipient provider. The subject only picks the template
+ * (records / bill / generic); its words never reach the provider. Null when the date is missing.
+ */
+export function templateCorrespondence(subject: string, outbound: boolean, date: string | null | undefined): string | null {
+  const when = formatShortDate(date);
+  if (!when) return null;
+  const s = subject.toLowerCase();
+  const records = /\b(records?|chart|notes|report|narrative|imaging|films)\b/.test(s);
+  const bill = /\b(ledger|bill|billing|invoice|charges|itemi[sz]ed)\b/.test(s);
+  if (outbound) {
+    if (bill) return `Itemized ledger request sent ${when}`;
+    if (records) return `Records request sent ${when}`;
+    return `Request sent to your office ${when}`;
+  }
+  if (records) return `Your records received ${when}`;
+  if (bill) return `Your bill received ${when}`;
+  return `Correspondence received from your office ${when}`;
+}
+
 /** "02-pleadings__bill-of-particulars.pdf" -> "Bill of particulars" */
 export function humanizeFilename(filename: string): string {
   const base = filename.replace(/\.[a-z0-9]{2,5}$/i, "");
