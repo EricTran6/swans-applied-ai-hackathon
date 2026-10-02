@@ -7,7 +7,7 @@ import { validateRefs } from "@/lib/digest";
 import { callJson, models, LLM_REF_SCHEMA } from "./client";
 import { byDateDesc, normName, quoteContainsNumber, recordBlock } from "./common";
 
-export const FACTS_EXTRACTOR_VERSION = "facts-v3";
+export const FACTS_EXTRACTOR_VERSION = "facts-v4";
 
 // Which free-text records are worth a look. Generic PI vocabulary, not case data.
 const FACT_KEYWORDS =
