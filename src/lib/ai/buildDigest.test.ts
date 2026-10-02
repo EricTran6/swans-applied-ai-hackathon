@@ -13,7 +13,7 @@ vi.mock("@/lib/digest", async () => {
   return { validateRefs: h.fakeValidateRefs, computeDeterministic: h.fakeComputeDeterministic, inputSetHash: h.fakeInputSetHash, diffSince: () => [] };
 });
 
-import { buildDigest } from "./index";
+import { buildDigest, markUnextracted } from "./index";
 
 const cf = makeCustomField("pl", "Policy Limits", "Liability $250,000/$500,000");
 const matter = makeMatter([cf]);
@@ -86,6 +86,16 @@ describe("buildDigest", () => {
     const again = await buildDigest({ matter, records, docTexts, changeFeed: [], prev, cache: new MemoryCache(), log: () => {}, now });
     expect(again.meta.cached).toBeUndefined();
     expect(createMock).toHaveBeenCalled();
+  });
+
+  it("labels empty fact KPIs as not extracted (not 'not in Clio') when fact extraction errored", () => {
+    const kpis = [
+      { key: "coverage", label: "Coverage", display: "Not recorded in Clio", value: null, unit: "usd", status: "unknown", refs: [], asOf: "x", computedBy: "code" },
+      { key: "firm_spend", label: "Firm spend", display: "$1", value: 1, unit: "usd", status: "ok", refs: [], asOf: "x", computedBy: "code" },
+    ] as Digest["kpis"];
+    const out = markUnextracted(kpis);
+    expect(out[0].display).toBe("Not extracted (AI error)");
+    expect(out[1]).toBe(kpis[1]);
   });
 
   it("rebuilds when the previous digest came from a different pipeline version", async () => {

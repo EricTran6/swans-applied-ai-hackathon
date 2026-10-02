@@ -24,6 +24,12 @@ export function isReusable(prev: Digest | null, hash: string): prev is Digest {
   return !(prev.meta?.warnings ?? []).some((w) => TRANSIENT_FAILURE.test(w));
 }
 
+const FACT_KPIS = new Set(["case_value", "coverage"]);
+export function markUnextracted(kpis: Digest["kpis"]): Digest["kpis"] {
+  return kpis.map((k) => (FACT_KPIS.has(k.key) && k.value == null
+    ? { ...k, display: "Not extracted (AI error)", note: "Fact extraction failed on the last build; rebuild to retry." } : k));
+}
+
 export async function buildDigest(i: {
   matter: Matter; records: ClioRecord[]; docTexts: DocumentText[]; changeFeed: ChangeEntry[];
   prev: Digest | null; cache: ExtractionCache; log: (c: AiCall) => void; now: Date;
@@ -53,6 +59,9 @@ export async function buildDigest(i: {
   droppedRefs += inj.droppedRefs + syn.droppedRefs;
   warnings.push(...inj.warnings, ...syn.warnings);
 
+  // When fact extraction failed, an empty money KPI means "not extracted", not "not in Clio".
+  const factsFailed = facts.warnings.some((w) => w.startsWith("extract_facts") && TRANSIENT_FAILURE.test(w));
+  const kpis = factsFailed ? markUnextracted(det.kpis) : det.kpis;
   const topTen = det.topTen.map((t) => ({ ...t, why: syn.output.whys[t.ref.drawerKey] ?? t.why }));
   const client = { ...det.client, statusChips: syn.output.statusChips.length ? syn.output.statusChips : det.client.statusChips };
   const m = models();
@@ -62,6 +71,7 @@ export async function buildDigest(i: {
     matterId: i.matter.matterId,
     createdAt: i.now.toISOString(),
     inputSetHash: hash,
+    kpis,
     client,
     topTen,
     brief: syn.output.brief,
