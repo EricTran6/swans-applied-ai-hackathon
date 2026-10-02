@@ -1,17 +1,25 @@
 // Dated case timeline with generic PI milestone rules.
 import { createHash } from "node:crypto";
 import type { ClioRecord, CustomFieldValue, Matter, SourceRef, TimelineEvent } from "@/lib/types";
-import { byType, dayKey, metaRef, normText } from "./util";
+import { byType, daysBetween, dayKey, displayTitle, metaRef, normText, stripReplyPrefix, withoutNames } from "./util";
 
-type Milestone = "incident" | "retained" | "surgery" | "suit" | "coverage" | "ime" | "hearing";
-// Applied to the record's title; the coverage rule also reads the body (it needs "confirmed" + "limits").
+type Milestone = "incident" | "retained" | "suit" | "surgery" | "coverage" | "trial" | "ime" | "hearing";
+/** Highest priority first; used when capping the story strip. */
+const PRIORITY: Milestone[] = ["incident", "retained", "suit", "surgery", "coverage", "trial", "ime", "hearing"];
+export const MAX_MILESTONES = 12;
+export const COLLAPSE_DAYS = 14;
+
+// Applied to the record's title (reply prefix and contact names removed): the event itself, not talk about it.
 const TITLE_RULES: [Milestone, RegExp][] = [
   ["suit", /\b(suit|complaint|summons)\b.*\b(filed|commenced|served)\b|\b(filed|commenced)\b.*\b(suit|complaint)\b/],
   ["retained", /\b(retain\w*|retainer|initial consult\w*|intake consult\w*|signed up)\b/],
   ["surgery", /\b(surgery|surgical procedure|arthroscop\w*|\w+ectomy|\w+plasty|fusion|operation)\b/],
   ["ime", /\b(ime|independent medical exam\w*)\b/],
-  ["hearing", /\b(trial|conference|mediation|arbitration|hearing)\b/],
+  ["trial", /\b(trial|mediation|arbitration)\b/],
+  ["hearing", /\b(conference|hearing|deposition|ebt)\b/],
 ];
+// Titles that are communications or admin *about* an event (a call, a letter, a notice, scheduling, a status recap).
+const ABOUT_RE = /\b(call|calls|called|calling|phone|email|e-mail|letter|notice|chaser|follow[- ]?up|reminder|check[- ]?in|proposed|request\w*|status|update|ahead|prep|prepare|preparation|review|schedul\w*|reschedul\w*|availability|dates|re)\b/;
 const COVERAGE_RE = /\b(confirmed\b[^.]{0,60}\blimits?|limits?\b[^.]{0,40}\bconfirmed|coverage confirmed)\b/;
 const ONCE: Milestone[] = ["incident", "retained", "suit", "coverage"];
 
@@ -21,54 +29,91 @@ export function incidentField(matter: Matter, records: ClioRecord[]): CustomFiel
   return all.find((f) => f.fieldType === "date" && INCIDENT_FIELD.test(f.name) && dayKey(String(f.value ?? ""))) ?? null;
 }
 
-function category(r: ClioRecord, m: Milestone | null): TimelineEvent["category"] {
+type Category = TimelineEvent["category"];
+// Ordered: first match wins. Run on text with reply prefixes and contact names removed.
+const CATEGORY_RULES: [Category, RegExp][] = [
+  ["legal", /\b(court|conference|deposition|ebt|discovery|trial|motion|mediation|arbitration|hearing|suit|complaint|summons|pleadings?|subpoena|bill of particulars|interrogator\w*)\b/],
+  ["money", /\b(employment|wages?|commissions?|ledgers?|bills?|billing|invoices?|liens?|specials|expenses?|payroll|earnings)\b/],
+  ["treatment", /\b(surgery|surgical|therapy|treat\w*|mri|x-?rays?|pt|physical therapy|ortho\w*|chiro\w*|er|ime|medical|records|diagnos\w*|post-op|arthroscop\w*)\b/],
+  ["insurance", /\b(coverage|limits?|adjuster|insur\w*|policy|carrier|no-fault|pip|um\/uim)\b/],
+];
+const ruleCategory = (text: string): Category | null => CATEGORY_RULES.find(([, re]) => re.test(text))?.[0] ?? null;
+
+/** Timeline category of a record. Title decides; body is a fallback only when the title says nothing. */
+export function timelineCategory(r: ClioRecord, names: string[]): Category {
+  if (r.sourceType === "expense") return "money";
+  return ruleCategory(withoutNames(stripReplyPrefix(displayTitle(r)), names))
+    ?? ruleCategory(withoutNames(r.bodyText, names))
+    ?? (r.sourceType === "communication" ? "communication" : "legal");
+}
+
+function milestoneKind(r: ClioRecord, names: string[]): Milestone | null {
+  if (r.sourceType === "communication") return null; // communications are never the event itself
+  const title = withoutNames(stripReplyPrefix(displayTitle(r)), names);
+  if (ABOUT_RE.test(title)) return null;
+  let kind = TITLE_RULES.find(([, re]) => re.test(title))?.[0] ?? null;
+  if (!kind && r.sourceType === "note" && COVERAGE_RE.test(normText(`${r.title} ${r.bodyText}`))) kind = "coverage";
+  if (r.sourceType === "document" && kind !== "suit") return null; // documents: only filed pleadings are milestones
+  return kind;
+}
+
+function milestoneCategory(m: Milestone): Category {
   if (m === "incident") return "incident";
   if (m === "surgery" || m === "ime") return "treatment";
   if (m === "coverage") return "insurance";
-  if (m === "suit" || m === "hearing" || m === "retained") return "legal";
-  if (r.sourceType === "expense") return "money";
-  const t = normText(`${r.title} ${r.bodyText}`);
-  if (/\b(coverage|limits?|adjuster|insur\w*|policy)\b/.test(t)) return "insurance";
-  if (/\b(lien|bill|ledger|specials)\b/.test(t)) return "money";
-  if (/\b(treat\w*|therapy|pt|surgery|er|mri|ortho\w*|medical|chiro\w*)\b/.test(t)) return "treatment";
-  if (r.sourceType === "communication") return "communication";
   return "legal";
 }
 
 const eventId = (date: string, title: string, clioId: string) =>
   createHash("sha1").update(`${date}|${title}|${clioId}`).digest("hex");
 
+type Ev = TimelineEvent & { kind: Milestone | null; thread: string | null };
+
+/** Same kind within COLLAPSE_DAYS -> earliest only; one-time kinds once; then cap by kind priority. */
+function selectMilestones(events: Ev[]): void {
+  const lastKept = new Map<Milestone, string>();
+  for (const e of events) {
+    if (!e.kind) continue;
+    const prev = lastKept.get(e.kind);
+    if (prev && (ONCE.includes(e.kind) || daysBetween(prev, e.date) <= COLLAPSE_DAYS)) { e.milestone = false; continue; }
+    lastKept.set(e.kind, e.date);
+  }
+  const kept = events.filter((e) => e.milestone)
+    .sort((a, b) => PRIORITY.indexOf(a.kind!) - PRIORITY.indexOf(b.kind!) || b.date.localeCompare(a.date));
+  for (const e of kept.slice(MAX_MILESTONES)) e.milestone = false;
+}
+
 export function buildTimeline(matter: Matter, records: ClioRecord[]): TimelineEvent[] {
-  const events: (TimelineEvent & { kind: Milestone | null })[] = [];
-  const push = (date: string, title: string, ref: SourceRef, r: ClioRecord, kind: Milestone | null) =>
+  const names = byType(records, "contact").map((c) => c.name);
+  const events: Ev[] = [];
+  const push = (date: string, title: string, ref: SourceRef, category: Category, kind: Milestone | null, thread: string | null) =>
     events.push({ id: eventId(date, title, ref.clioId), date, derivation: "clio-metadata", title,
-      category: category(r, kind), milestone: kind != null, refs: [ref], kind });
+      category, milestone: kind != null, refs: [ref], kind, thread });
 
   const inc = incidentField(matter, records);
   if (inc) {
     const d = dayKey(String(inc.value))!;
-    push(d, "Incident", metaRef(inc, d), inc, "incident");
+    push(d, "Incident", metaRef(inc, d), "incident", "incident", null);
   }
   const dated: ClioRecord[] = [...byType(records, "calendar_entry"), ...byType(records, "note"),
     ...byType(records, "communication"), ...byType(records, "document")];
   for (const r of dated) {
     const d = dayKey(r.sourceType === "document" ? r.receivedAt ?? r.sourceDate : r.sourceDate);
     if (!d) continue;
-    const title = normText(r.title);
-    let kind: Milestone | null = TITLE_RULES.find(([, re]) => re.test(title))?.[0] ?? null;
-    if (!kind && COVERAGE_RE.test(normText(`${r.title} ${r.bodyText}`))) kind = "coverage";
-    if (r.sourceType === "document" && kind !== "suit") kind = null; // documents: only filed pleadings are milestones
-    push(d, kind === "coverage" ? "Coverage confirmed" : r.title, metaRef(r, d), r, kind);
+    const kind = milestoneKind(r, names);
+    const title = kind === "coverage" ? "Coverage confirmed" : displayTitle(r);
+    const thread = r.sourceType === "communication" ? normText(stripReplyPrefix(r.title)) : null;
+    push(d, title, metaRef(r, d), kind ? milestoneCategory(kind) : timelineCategory(r, names), kind, thread);
   }
   events.sort((a, b) => a.date.localeCompare(b.date) || Number(b.milestone) - Number(a.milestone));
-  // One-time milestones mark only their first occurrence; repeatable ones once per date.
-  const seen = new Set<string>();
+  // A reply belongs with its thread: every message takes the category of the thread's first message.
+  const threadCat = new Map<string, Category>();
   for (const e of events) {
-    if (!e.kind) continue;
-    const k = ONCE.includes(e.kind) ? e.kind : `${e.kind}|${e.date}`;
-    if (seen.has(k)) e.milestone = false;
-    seen.add(k);
+    if (!e.thread) continue;
+    const c = threadCat.get(e.thread);
+    if (c) e.category = c; else threadCat.set(e.thread, e.category);
   }
+  selectMilestones(events);
   return events.map((e) => ({ id: e.id, date: e.date, derivation: e.derivation, title: e.title,
     category: e.category, milestone: e.milestone, refs: e.refs }));
 }

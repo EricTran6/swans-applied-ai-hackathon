@@ -92,8 +92,9 @@ describe("action board", () => {
   });
   it("upcoming within 30 days includes tasks and calendar entries", () => {
     const ids = build().d.actionBoard.upcoming.map((a) => a.id);
-    expect(ids).toEqual(expect.arrayContaining(["task:100052", "task:100054", "calendar_entry:100062"]));
+    expect(ids).toEqual(expect.arrayContaining(["task:100054", "calendar_entry:100062"]));
     expect(ids).not.toContain("task:100048");
+    expect(ids).not.toContain("task:100052"); // already under waiting-on
   });
 });
 
