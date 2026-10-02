@@ -6,7 +6,7 @@ import { validateRefs } from "@/lib/digest";
 import { callJson, models } from "./client";
 import { byDateDesc, earliest, normName } from "./common";
 
-export const INJURY_EXTRACTOR_VERSION = "injuries-v2";
+export const INJURY_EXTRACTOR_VERSION = "injuries-v3";
 const CLASSIFY_VERSION = "injury-classify-v1";
 export const MAX_INJURY_DOCS = 4;
 const PAGES_PER_CHUNK = 25;
@@ -54,7 +54,7 @@ List each distinct injury or diagnosis attributed to the plaintiff/patient. The 
 - One item per diagnosis (a tear, a disc bulge, a concussion), not per symptom: fold pain, spasm, reduced range of motion and similar symptoms into the diagnosis they belong to.
 - name: short clinical label that reads on its own, including laterality/region (e.g. "Left shoulder posterior labral tear").
 - bodyPart: ONE region in Title case, with laterality when stated. Use these labels when they fit: Head, Cervical spine, Thoracic spine, Lumbar spine, Left shoulder, Right shoulder, Left knee, Right knee, Left wrist, Right wrist, Left hand, Right hand, Left hip, Right hip, Left ankle, Right ankle; otherwise a similar short label. Neck injuries are "Cervical spine"; brain, concussion and headache are "Head".
-- status: surgery-done if a surgery for it was performed; surgery-recommended if a surgery is recommended/pending; otherwise diagnosed.
+- status: surgery-done if a surgery performed on that body region treated it (repair, reconstruction, debridement, decompression, synovectomy of that region counts for the tears and lesions listed there); surgery-recommended if a surgery is recommended/pending; otherwise diagnosed.
 - firstDocumented: the earliest date (YYYY-MM-DD) stated for it in this document, or null.
 - refs: one or more {page, quote}: the page where it is stated and a short VERBATIM substring (5-15 words) copied exactly from that page, in its original case.
 Only list injuries explicitly stated in the text. Do not invent pages or quotes.`;
