@@ -6,7 +6,7 @@ import type {
   Communication, ShareCandidate, ShareCategory, SharePreset, Task, TimelineEvent,
 } from "@/lib/types";
 import { providerFor, providers, roleLabel } from "./scope";
-import { humanizeFilename, templateNeed, templateUpdate } from "./templates";
+import { humanizeFilename, isProviderSafe, templateNeed, templateUpdate } from "./templates";
 
 export const DEFAULT_PRESET: SharePreset = {
   allow: ["status", "stage", "coverage", "appointments", "requests", "own_records", "own_bill", "updates"],
@@ -226,7 +226,7 @@ export function buildItems(d: Digest, records: ClioRecord[], recipientContactId:
       case "contact": {
         const c = r as Contact;
         if (c.isClient) items.push(mk(`contact:${c.clioId}`, "client_pii", "Client identity and contact details", "Only first name and last initial are ever shown", null, { kind: "none" }));
-        else if (c.roleKind === "provider" && c.clioId !== rid) items.push(mk(`careteam:${c.clioId}`, "care_team", `Care team: ${c.name}`, `${c.name} (${roleLabel(c)})`, c.clioId, { kind: "careteam", name: c.name, role: roleLabel(c) }));
+        else if (c.roleKind === "provider" && c.clioId !== rid && isProviderSafe(c.name) && isProviderSafe(roleLabel(c))) items.push(mk(`careteam:${c.clioId}`, "care_team", `Care team: ${c.name}`, `${c.name} (${roleLabel(c)})`, c.clioId, { kind: "careteam", name: c.name, role: roleLabel(c) }));
         break;
       }
       default:
@@ -235,10 +235,16 @@ export function buildItems(d: Digest, records: ClioRecord[], recipientContactId:
   }
 
   // --- updates from structured milestone events (legal / insurance only; never note text) ---
+  // One candidate per templated sentence (newest date wins), so "Case in discovery" never repeats.
+  const latestByText = new Map<string, TimelineEvent>();
   for (const ev of d.timeline as TimelineEvent[]) {
     if (!(ev.category === "legal" || ev.category === "insurance")) continue;
     const text = templateUpdate(ev.title, ev.category);
     if (!text) continue;
+    const prev = latestByText.get(text);
+    if (!prev || (dateOnly(ev.date) ?? "") > (dateOnly(prev.date) ?? "")) latestByText.set(text, ev);
+  }
+  for (const [text, ev] of latestByText) {
     items.push(mk(`update:${ev.id}`, "updates", `Update: ${text}`, `${ev.date}: ${text}`, null, { kind: "update", date: dateOnly(ev.date) ?? "", text }));
   }
 
@@ -248,11 +254,13 @@ export function buildItems(d: Digest, records: ClioRecord[], recipientContactId:
     const ref = inj.refs.find((x) => x.sourceType === "document" && x.page);
     if (!ref) return;
     const doc = docsById.get(ref.clioId);
-    if (!doc || /expert|\bime\b|independent medical/i.test(`${doc.folder ?? ""} ${doc.filename}`)) return;
+    // medical records only: never pleadings, demand, settlement, expert or IME material
+    if (!doc || documentFolderKind(doc) !== "record" || /expert|\bime\b|independent medical/i.test(`${doc.folder ?? ""} ${doc.filename}`)) return;
     const status = inj.status === "surgery-done" ? (inj.firstDocumented ? `, surgery ${inj.firstDocumented}` : ", surgery done")
       : inj.status === "surgery-recommended" ? ", surgery recommended, date pending" : "";
     const text = `${inj.name}${status}`;
     const source = `${humanizeFilename(doc.filename)} p${ref.page}`;
+    if (!isProviderSafe(text) || !isProviderSafe(source)) return;
     items.push(mk(`finding:${i}`, "care_team", `Finding: ${inj.name}`, `${text} (${source})`, null, { kind: "finding", text, source }));
   });
 

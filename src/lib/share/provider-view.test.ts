@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Document, Note } from "@/lib/types";
+import { buildProviderShare } from "./provider-view";
 import { buildCandidates, buildProviderView, DEFAULT_PRESET, ID_COVERAGE, ID_COVERAGE_LIMITS, ID_OWN_BILL, ID_STATUS, stageLabel, clientDisplayName } from "./index";
 import { fixtureDigest, fixtureProviders, fixtureRecords, FIXTURE_NOW } from "./__tests__/fixture-records";
 
@@ -73,8 +74,24 @@ describe("per-provider scoping", () => {
     const v = view(withBill.providerContactId, defaultIds(withBill.providerContactId));
     expect(v.needs.length).toBeGreaterThan(0);
     for (const n of v.needs) { expect(n.text).toMatch(/^(Send|Confirm)/); expect(n.text).not.toMatch(/By medical provider|\d{4}-\d{2}-\d{2}/); }
-    const vo = view(other.clioId, defaultIds(other.clioId));
-    expect(vo.needs.map((n) => n.id)).not.toEqual(v.needs.map((n) => n.id));
+    const share = (r: string) => buildProviderShare(d, records, defaultIds(r), { label: "x", contactId: r }, null, FIXTURE_NOW);
+    const mine = share(withBill.providerContactId!);
+    const theirs = share(other.clioId);
+    expect(Object.values(theirs.needMap)).not.toEqual(Object.values(mine.needMap));
+  });
+  it("need ids are opaque per share; the task mapping stays server-side", () => {
+    for (const p of provs) {
+      const { view: v, needMap } = buildProviderShare(d, records, allIds(p.clioId), { label: "x", contactId: p.clioId }, null, FIXTURE_NOW);
+      const json = JSON.stringify(v);
+      expect(json).not.toMatch(/task:/);
+      for (const n of v.needs) expect(n.id).not.toMatch(/\d{4,}/); // no Clio-id-looking digits in need ids
+      for (const cid of Object.values(needMap).map((k) => k.split(":")[1])) expect(json).not.toContain(cid);
+      v.needs.forEach((n, i) => {
+        expect(n.id).toBe(`need-${i + 1}`);
+        expect(needMap[n.id]).toMatch(/^task:\d+$/);
+      });
+      expect(Object.keys(needMap)).toHaveLength(v.needs.length);
+    }
   });
   it("other providers' records are opt-in per item and other tasks are refused even if forced", () => {
     const cands = buildCandidates(d, records, other.clioId, DEFAULT_PRESET);
@@ -105,9 +122,26 @@ describe("coverage, status, stage, updates, care team", () => {
     expect(view(rid, []).coverage).toBeNull();
   });
   it("status is active with last firm activity and next event dates; withheld when not included", () => {
-    const v = view(rid, [ID_STATUS]);
+    const appt = "calendar_entry:100061"; // Riverside PT treatment visit on 2026-10-06
+    const v = view(rid, [ID_STATUS, appt]);
     expect(v.status).toEqual({ label: "Active", alive: "active", lastFirmActivity: "2026-09-28", nextEvent: "2026-10-06" });
     expect(view(rid, []).status.lastFirmActivity).toBeNull();
+  });
+  it("nextEvent is only the recipient's own shared treatment appointment (never court/other-provider dates)", () => {
+    const court = "calendar_entry:100062"; // compliance conference
+    expect(view(rid, [ID_STATUS, court]).status.nextEvent).toBeNull();
+    for (const p of provs.filter((x) => x.clioId !== rid)) {
+      expect(view(p.clioId, [ID_STATUS, ...allIds(p.clioId), "calendar_entry:100061", court]).status.nextEvent).toBeNull();
+    }
+  });
+  it("updates are deduped by text: one entry per templated sentence", () => {
+    const t4 = d.timeline.find((t) => t.id === "t4")!;
+    const dup = { ...d, timeline: [...d.timeline, { ...t4, id: "t4b", date: "2025-04-01" }] };
+    const cands = buildCandidates(dup, records, rid, DEFAULT_PRESET).filter((c) => c.category === "updates" && c.providerContactId == null);
+    const texts = cands.map((c) => c.label);
+    expect(new Set(texts).size).toBe(texts.length);
+    const v = buildProviderView(dup, records, cands.map((c) => c.id), { label: "x", contactId: rid }, null, FIXTURE_NOW);
+    expect(v.updates.filter((u) => u.text === "Lawsuit filed")).toEqual([{ date: "2025-04-01", text: "Lawsuit filed" }]);
   });
   it("stage maps to the coarse label", () => {
     expect(view(rid, defaultIds(rid)).stage.label).toBe("In litigation");
@@ -129,14 +163,26 @@ describe("coverage, status, stage, updates, care team", () => {
   it("care team and findings appear only when opted in (HIPAA field true in fixture) and cite document pages", () => {
     const base = view(rid, defaultIds(rid));
     expect(base.careTeam).toBeUndefined(); expect(base.findings).toBeUndefined();
-    const bop = records.find((r): r is Document => r.sourceType === "document" && /particulars/i.test(r.filename))!;
-    const withBop = [...records, { ...bop, clioId: d.injuries[0].refs[0].clioId }];
+    const medRec = records.find((r): r is Document => r.sourceType === "document" && /medical-records/i.test(r.filename))!;
+    const withBop = [...records, { ...medRec, clioId: d.injuries[0].refs[0].clioId }];
     const cands = buildCandidates(d, withBop, rid, DEFAULT_PRESET);
     const optIn = cands.filter((c) => c.category === "care_team").map((c) => c.id);
     const v = buildProviderView(d, withBop, [...defaultIds(rid), ...optIn], { label: "x", contactId: rid }, null, FIXTURE_NOW);
     expect(v.careTeam?.length).toBe(provs.length - 1);
     expect(v.findings?.length).toBe(d.injuries.length);
     for (const f of v.findings!) expect(f.source).toMatch(/ p\d+$/);
+  });
+  it("findings are refused when the source is a pleading/demand/settlement doc, not a medical record", () => {
+    const bop = records.find((r): r is Document => r.sourceType === "document" && /particulars/i.test(r.filename))!;
+    for (const [folder, filename] of [[bop.folder ?? "02 Pleadings", bop.filename], ["06 Demand", "06-demand__demand-letter.pdf"], ["07 Settlement", "07-settlement__release.pdf"]] as const) {
+      const withDoc = [...records, { ...bop, folder, filename, clioId: d.injuries[0].refs[0].clioId }];
+      expect(buildCandidates(d, withDoc, rid, DEFAULT_PRESET).some((c) => c.id.startsWith("finding:"))).toBe(false);
+    }
+  });
+  it("care team entries whose name or role trips the leak filter are dropped", () => {
+    const leaky = records.map((r) => (r.sourceType === "contact" && r.roleKind === "provider" && r.clioId !== rid ? { ...r, name: `${r.name} Lien Funding` } : r));
+    const cands = buildCandidates(d, leaky, rid, DEFAULT_PRESET);
+    expect(cands.some((c) => c.category === "care_team" && c.id.startsWith("careteam:"))).toBe(false);
   });
   it("care team is withheld when the HIPAA field is not true", () => {
     const noHipaa = records.map((r) => (r.sourceType === "custom_field" && /hipaa/i.test(r.name) ? { ...r, value: false } : r))

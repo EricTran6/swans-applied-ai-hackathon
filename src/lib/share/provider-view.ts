@@ -49,8 +49,17 @@ export function admissibleIds(items: ShareItem[], includedIds: string[], recipie
   return out;
 }
 
+/** Opaque per-share need id ("need-1"...) -> internal candidate id ("task:<clioId>"). Server-side only. */
+export type NeedMap = Record<string, string>;
+
 export function buildProviderView(d: Digest, records: ClioRecord[], includedIds: string[],
   recipient: { label: string; contactId: string | null }, attorneyNote: string | null, now: Date): ProviderView {
+  return buildProviderShare(d, records, includedIds, recipient, attorneyNote, now).view;
+}
+
+/** The provider view plus the server-side need-id map (store it, never send it). */
+export function buildProviderShare(d: Digest, records: ClioRecord[], includedIds: string[],
+  recipient: { label: string; contactId: string | null }, attorneyNote: string | null, now: Date): { view: ProviderView; needMap: NeedMap } {
   const rid = recipient.contactId;
   const ctx = buildContext(records, rid);
   const items = buildItems(d, records, rid, ctx);
@@ -73,9 +82,18 @@ export function buildProviderView(d: Digest, records: ClioRecord[], includedIds:
   const future = records
     .filter((r): r is CalendarEntry => r.sourceType === "calendar_entry" && new Date(r.startAt) >= now)
     .sort((a, b) => a.startAt.localeCompare(b.startAt));
+
+  // appointments (future, this provider's own treatment entries that the attorney included)
+  const appointments = chosen
+    .flatMap((i) => (i.payload.kind === "calendar" && rid && i.providerContactId === rid ? [i.payload.entry] : []))
+    .filter((e) => new Date(e.startAt) >= now)
+    .sort((a, b) => a.startAt.localeCompare(b.startAt))
+    .map((e) => ({ title: "Client treatment", date: dateOnly(e.startAt) ?? "" }));
+
+  // nextEvent: only the recipient's own shared treatment appointment, never court/IME/other providers' dates
   const status: ProviderView["status"] = has(ID_STATUS)
     ? { label: alive === "active" ? "Active" : alive === "closed" ? "Closed" : "No recent activity", alive,
-        lastFirmActivity, nextEvent: future.length ? dateOnly(future[0].startAt) : null }
+        lastFirmActivity, nextEvent: appointments[0]?.date || null }
     : { label: "Not shared", alive, lastFirmActivity: null, nextEvent: null };
 
   // coverage
@@ -97,9 +115,16 @@ export function buildProviderView(d: Digest, records: ClioRecord[], includedIds:
   }
 
   // needs (open tasks naming this provider), templated
+  // ids are opaque per share; the mapping back to the task stays server-side (needMap)
+  const needMap: NeedMap = {};
   const needs = chosen.flatMap((i) => (i.payload.kind === "task" && i.providerContactId === rid
-    ? [{ id: i.id, text: i.preview.replace(/\s*\(due [^)]*\)\s*$/, ""), due: dateOnly(i.payload.task.dueAt) }] : []))
-    .filter((n) => isProviderSafe(n.text));
+    ? [{ key: i.id, text: i.preview.replace(/\s*\(due [^)]*\)\s*$/, ""), due: dateOnly(i.payload.task.dueAt) }] : []))
+    .filter((n) => isProviderSafe(n.text))
+    .map((n, idx) => {
+      const id = `need-${idx + 1}`;
+      needMap[id] = n.key;
+      return { id, text: n.text, due: n.due };
+    });
 
   // own bill
   const billItem = chosen.find((i) => i.id === ID_OWN_BILL && i.payload.kind === "bill");
@@ -110,13 +135,6 @@ export function buildProviderView(d: Digest, records: ClioRecord[], includedIds:
     const stale = !!through && treatmentContinues && daysBetween(now, new Date(through)) > STALE_BILL_DAYS;
     bill = { amount: billItem.payload.amount, servicesThrough: billItem.payload.servicesThrough, stale };
   }
-
-  // appointments (future, this provider)
-  const appointments = chosen
-    .flatMap((i) => (i.payload.kind === "calendar" && i.providerContactId === rid ? [i.payload.entry] : []))
-    .filter((e) => new Date(e.startAt) >= now)
-    .sort((a, b) => a.startAt.localeCompare(b.startAt))
-    .map((e) => ({ title: "Client treatment", date: dateOnly(e.startAt) ?? "" }));
 
   // records (own records/bill docs, plus explicitly opted-in other records)
   const records_ = chosen
@@ -133,7 +151,7 @@ export function buildProviderView(d: Digest, records: ClioRecord[], includedIds:
     .flatMap((i) => (i.payload.kind === "update" && (i.providerContactId == null || i.providerContactId === rid) ? [i.payload] : []))
     .filter((u) => u.date && isProviderSafe(u.text))
     .sort((a, b) => b.date.localeCompare(a.date))
-    .filter((u) => { const k = `${u.date}|${u.text}`; if (seen.has(k)) return false; seen.add(k); return true; })
+    .filter((u) => { if (seen.has(u.text)) return false; seen.add(u.text); return true; }) // newest per text
     .map((u) => ({ date: u.date, text: u.text }));
 
   const view: ProviderView = {
@@ -155,12 +173,13 @@ export function buildProviderView(d: Digest, records: ClioRecord[], includedIds:
 
   // care team / findings: opt-in AND HIPAA authorization on file
   if (ctx.hipaaOnFile) {
-    const careTeam = chosen.flatMap((i) => (i.payload.kind === "careteam" ? [{ name: i.payload.name, role: i.payload.role }] : []));
+    const careTeam = chosen.flatMap((i) => (i.payload.kind === "careteam" ? [{ name: i.payload.name, role: i.payload.role }] : []))
+      .filter((c) => isProviderSafe(c.name) && isProviderSafe(c.role));
     const findings = chosen.flatMap((i) => (i.payload.kind === "finding" ? [{ text: i.payload.text, source: i.payload.source }] : []))
-      .filter((f) => isProviderSafe(f.text));
+      .filter((f) => isProviderSafe(f.text) && isProviderSafe(f.source));
     if (careTeam.length) view.careTeam = careTeam;
     if (findings.length) view.findings = findings;
   }
-  return view;
+  return { view, needMap };
 }
 
