@@ -1,0 +1,944 @@
+{
+ "matterId": "900001",
+ "version": 3,
+ "createdAt": "2026-10-02T11:00:00Z",
+ "inputSetHash": "sample",
+ "header": {
+  "clientName": "Jane Doe",
+  "clientInitials": "JD",
+  "displayNumber": "00042-Doe",
+  "description": "Doe, Jane - MVA (Main St & 2nd Ave, Springfield)",
+  "status": "Open",
+  "matterUrl": "https://app.clio.com/nc/#/matters/900001",
+  "incidentDate": {
+   "value": "2024-03-10",
+   "sourceType": "custom_field",
+   "clioId": "date-30001",
+   "sourceDate": null,
+   "quote": null,
+   "drawerKey": "custom_field:date-30001",
+   "derivation": "clio-metadata",
+   "quoteVerified": false
+  },
+  "sol": {
+   "date": "2026-03-01",
+   "status": "satisfied",
+   "refs": [
+    {
+     "value": "Satisfied",
+     "sourceType": "task",
+     "clioId": "100039",
+     "sourceDate": "2026-03-01",
+     "quote": null,
+     "drawerKey": "task:100039",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  }
+ },
+ "client": {
+  "name": "Jane Doe",
+  "initials": "JD",
+  "age": 36,
+  "avatarUrl": null,
+  "lastContact": {
+   "date": "2026-09-28",
+   "kind": "Phone",
+   "daysAgo": 4,
+   "summary": "Asked whether to keep PT twice weekly",
+   "ref": {
+    "value": "2026-09-28",
+    "sourceType": "communication",
+    "clioId": "100030",
+    "sourceDate": "2026-09-28",
+    "quote": "Jane called: asked whether to keep PT twice weekly",
+    "drawerKey": "communication:100030",
+    "derivation": "stated",
+    "quoteVerified": true
+   }
+  },
+  "nextTouchpoint": {
+   "date": "2026-10-06",
+   "title": "Client treatment: Riverside PT",
+   "ref": {
+    "value": "2026-10-06",
+    "sourceType": "calendar_entry",
+    "clioId": "100049",
+    "sourceDate": "2026-10-06",
+    "quote": null,
+    "drawerKey": "calendar_entry:100049",
+    "derivation": "clio-metadata",
+    "quoteVerified": false
+   }
+  },
+  "statusChips": [
+   {
+    "text": "Treating twice weekly",
+    "refs": [
+     {
+      "value": "2026-09-28",
+      "sourceType": "communication",
+      "clioId": "100030",
+      "sourceDate": "2026-09-28",
+      "quote": "Jane called: asked whether to keep PT twice weekly",
+      "drawerKey": "communication:100030",
+      "derivation": "stated",
+      "quoteVerified": true
+     }
+    ]
+   },
+   {
+    "text": "Out of work",
+    "refs": [
+     {
+      "value": "2026-09-28",
+      "sourceType": "communication",
+      "clioId": "100030",
+      "sourceDate": "2026-09-28",
+      "quote": "Jane called: asked whether to keep PT twice weekly",
+      "drawerKey": "communication:100030",
+      "derivation": "stated",
+      "quoteVerified": true
+     }
+    ]
+   }
+  ]
+ },
+ "brief": [
+  {
+   "text": "Jane Doe was rear-ended on 2024-03-10 and had left shoulder surgery on 2024-06-04.",
+   "refs": [
+    {
+     "value": "2024-06-04",
+     "sourceType": "note",
+     "clioId": "100003",
+     "sourceDate": "2024-06-10",
+     "quote": "Left shoulder arthroscopy performed 2024-06-04",
+     "drawerKey": "note:100003",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "text": "Liability limits of $250,000/$500,000 were confirmed in writing on 2026-09-05, superseding the earlier self-insured note.",
+   "refs": [
+    {
+     "value": "$250,000/$500,000",
+     "sourceType": "note",
+     "clioId": "100007",
+     "sourceDate": "2026-09-05",
+     "quote": "liability limits $250,000/$500,000",
+     "drawerKey": "note:100007",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "text": "The biggest open item: right knee surgery is still undated after 4 requests to Lakeview Orthopaedics.",
+   "refs": [
+    {
+     "value": "Case posture",
+     "sourceType": "note",
+     "clioId": "100008",
+     "sourceDate": "2026-09-20",
+     "quote": "right knee surgery still undated after 4 requests to Lakeview",
+     "drawerKey": "note:100008",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "text": "State Medicaid holds a $9,400 lien.",
+   "refs": [
+    {
+     "value": "$9,400",
+     "sourceType": "note",
+     "clioId": "100005",
+     "sourceDate": "2025-02-02",
+     "quote": "lien of $9,400",
+     "drawerKey": "note:100005",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  }
+ ],
+ "kpis": [
+  {
+   "key": "case_value",
+   "label": "Case value",
+   "display": "$600,000 est. \u00b7 capped at $250,000",
+   "value": 600000,
+   "unit": "usd",
+   "range": {
+    "low": 250000,
+    "high": 600000,
+    "cap": 250000
+   },
+   "status": "warn",
+   "asOf": "2026-10-02",
+   "refs": [
+    {
+     "value": "$600,000",
+     "sourceType": "custom_field",
+     "clioId": "currency-30008",
+     "sourceDate": null,
+     "quote": null,
+     "drawerKey": "custom_field:currency-30008",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    },
+    {
+     "value": "$250,000/$500,000",
+     "sourceType": "note",
+     "clioId": "100007",
+     "sourceDate": "2026-09-05",
+     "quote": "liability limits $250,000/$500,000",
+     "drawerKey": "note:100007",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ],
+   "computedBy": "code"
+  },
+  {
+   "key": "coverage",
+   "label": "Coverage",
+   "display": "$250,000 BI \u00b7 confirmed",
+   "value": 250000,
+   "unit": "usd",
+   "status": "ok",
+   "asOf": "2026-10-02",
+   "refs": [
+    {
+     "value": "$250,000/$500,000",
+     "sourceType": "note",
+     "clioId": "100007",
+     "sourceDate": "2026-09-05",
+     "quote": "liability limits $250,000/$500,000",
+     "drawerKey": "note:100007",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ],
+   "conflicts": [
+    {
+     "value": "self-insured",
+     "sourceType": "note",
+     "clioId": "100002",
+     "sourceDate": "2024-03-20",
+     "quote": "Acme Delivery Corp is self-insured",
+     "drawerKey": "note:100002",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ],
+   "computedBy": "code"
+  },
+  {
+   "key": "firm_spend",
+   "label": "Firm spend",
+   "display": "$735",
+   "value": 735,
+   "unit": "usd",
+   "status": "ok",
+   "asOf": "2026-10-02",
+   "refs": [
+    {
+     "value": "$735",
+     "sourceType": "expense",
+     "clioId": "100070",
+     "sourceDate": "2026-05-10",
+     "quote": null,
+     "drawerKey": "expense:100070",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ],
+   "computedBy": "code"
+  },
+  {
+   "key": "last_client_contact",
+   "label": "Last client contact",
+   "display": "4 days ago (call)",
+   "value": 4,
+   "unit": "days",
+   "status": "ok",
+   "asOf": "2026-10-02",
+   "refs": [
+    {
+     "value": "2026-09-28",
+     "sourceType": "communication",
+     "clioId": "100030",
+     "sourceDate": "2026-09-28",
+     "quote": "Jane called: asked whether to keep PT twice weekly",
+     "drawerKey": "communication:100030",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ],
+   "computedBy": "code"
+  },
+  {
+   "key": "next_deadline",
+   "label": "Next deadline",
+   "display": "Oct 9 \u00b7 Riverside ledger",
+   "value": null,
+   "unit": "date",
+   "status": "warn",
+   "asOf": "2026-10-02",
+   "refs": [
+    {
+     "value": "2026-10-09",
+     "sourceType": "task",
+     "clioId": "100042",
+     "sourceDate": "2026-10-09",
+     "quote": null,
+     "drawerKey": "task:100042",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ],
+   "computedBy": "code"
+  },
+  {
+   "key": "specials",
+   "label": "Medical specials",
+   "display": "$41,250",
+   "value": 41250,
+   "unit": "usd",
+   "status": "ok",
+   "asOf": "2026-10-02",
+   "refs": [
+    {
+     "value": "$41,250",
+     "sourceType": "custom_field",
+     "clioId": "currency-30010",
+     "sourceDate": null,
+     "quote": null,
+     "drawerKey": "custom_field:currency-30010",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ],
+   "computedBy": "code"
+  }
+ ],
+ "coverage": [
+  {
+   "kind": "BI",
+   "perPerson": 250000,
+   "perAccident": 500000,
+   "carrier": "Claims Service Group",
+   "refs": [
+    {
+     "value": "$250,000/$500,000",
+     "sourceType": "note",
+     "clioId": "100007",
+     "sourceDate": "2026-09-05",
+     "quote": "liability limits $250,000/$500,000",
+     "drawerKey": "note:100007",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "kind": "UM/UIM",
+   "perPerson": 50000,
+   "perAccident": 100000,
+   "carrier": null,
+   "refs": [
+    {
+     "value": "UM/UIM",
+     "sourceType": "custom_field",
+     "clioId": "text_area-30006",
+     "sourceDate": null,
+     "quote": null,
+     "drawerKey": "custom_field:text_area-30006",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "kind": "No-fault/PIP",
+   "perPerson": 50000,
+   "perAccident": null,
+   "carrier": "Safeway Mutual Insurance",
+   "exhausted": true,
+   "refs": [
+    {
+     "value": "no-fault",
+     "sourceType": "custom_field",
+     "clioId": "text_area-30006",
+     "sourceDate": null,
+     "quote": null,
+     "drawerKey": "custom_field:text_area-30006",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  }
+ ],
+ "valueWaterfall": [
+  {
+   "label": "Liability limit",
+   "amount": 250000,
+   "kind": "start",
+   "refs": [
+    {
+     "value": "$250,000/$500,000",
+     "sourceType": "note",
+     "clioId": "100007",
+     "sourceDate": "2026-09-05",
+     "quote": "liability limits $250,000/$500,000",
+     "drawerKey": "note:100007",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "label": "Medicaid lien",
+   "amount": -9400,
+   "kind": "minus",
+   "refs": [
+    {
+     "value": "$9,400",
+     "sourceType": "note",
+     "clioId": "100005",
+     "sourceDate": "2025-02-02",
+     "quote": "lien of $9,400",
+     "drawerKey": "note:100005",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "label": "Firm costs",
+   "amount": -735,
+   "kind": "minus",
+   "refs": [
+    {
+     "value": "$735",
+     "sourceType": "expense",
+     "clioId": "100070",
+     "sourceDate": "2026-05-10",
+     "quote": null,
+     "drawerKey": "expense:100070",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "label": "Before attorney fees",
+   "amount": 239865,
+   "kind": "result",
+   "refs": []
+  }
+ ],
+ "providerBills": [
+  {
+   "providerContactId": "810002",
+   "providerName": "Lakeview Orthopaedics PLLC",
+   "amount": 26500,
+   "servicesThrough": null,
+   "refs": [
+    {
+     "value": "$26,500",
+     "sourceType": "expense",
+     "clioId": "100071",
+     "sourceDate": "2024-07-01",
+     "quote": null,
+     "drawerKey": "expense:100071",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "providerContactId": "810001",
+   "providerName": "Riverside Physical Therapy",
+   "amount": 12000,
+   "servicesThrough": "2025-01-08",
+   "refs": [
+    {
+     "value": "$12,000",
+     "sourceType": "expense",
+     "clioId": "100072",
+     "sourceDate": "2025-01-10",
+     "quote": null,
+     "drawerKey": "expense:100072",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "providerContactId": "810003",
+   "providerName": "Harbor Chiropractic",
+   "amount": 2750,
+   "servicesThrough": null,
+   "refs": [
+    {
+     "value": "$2,750",
+     "sourceType": "expense",
+     "clioId": "100073",
+     "sourceDate": "2024-12-01",
+     "quote": null,
+     "drawerKey": "expense:100073",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  }
+ ],
+ "topTen": [
+  {
+   "rank": 1,
+   "score": 0.94,
+   "title": "Case posture",
+   "why": "Self-labelled summary: knee surgery undated, ledger stale, causation disputed",
+   "category": "litigation",
+   "date": "2026-09-20",
+   "ref": {
+    "value": "Case posture",
+    "sourceType": "note",
+    "clioId": "100008",
+    "sourceDate": "2026-09-20",
+    "quote": "right knee surgery still undated after 4 requests to Lakeview",
+    "drawerKey": "note:100008",
+    "derivation": "stated",
+    "quoteVerified": true
+   }
+  },
+  {
+   "rank": 2,
+   "score": 0.9,
+   "title": "Coverage confirmed",
+   "why": "Limits confirmed in writing; supersedes self-insured note",
+   "category": "insurance",
+   "date": "2026-09-05",
+   "ref": {
+    "value": "$250,000/$500,000",
+    "sourceType": "note",
+    "clioId": "100007",
+    "sourceDate": "2026-09-05",
+    "quote": "liability limits $250,000/$500,000",
+    "drawerKey": "note:100007",
+    "derivation": "stated",
+    "quoteVerified": true
+   }
+  },
+  {
+   "rank": 3,
+   "score": 0.81,
+   "title": "Call with client",
+   "why": "Most recent client contact",
+   "category": "client",
+   "date": "2026-09-28",
+   "ref": {
+    "value": "2026-09-28",
+    "sourceType": "communication",
+    "clioId": "100030",
+    "sourceDate": "2026-09-28",
+    "quote": "Jane called: asked whether to keep PT twice weekly",
+    "drawerKey": "communication:100030",
+    "derivation": "stated",
+    "quoteVerified": true
+   }
+  },
+  {
+   "rank": 4,
+   "score": 0.7,
+   "title": "Medicaid lien",
+   "why": "Comes off the top of any recovery",
+   "category": "money",
+   "date": "2025-02-02",
+   "ref": {
+    "value": "$9,400",
+    "sourceType": "note",
+    "clioId": "100005",
+    "sourceDate": "2025-02-02",
+    "quote": "lien of $9,400",
+    "drawerKey": "note:100005",
+    "derivation": "stated",
+    "quoteVerified": true
+   }
+  },
+  {
+   "rank": 5,
+   "score": 0.66,
+   "title": "Post-op",
+   "why": "Anchor event: left shoulder surgery",
+   "category": "medical",
+   "date": "2024-06-10",
+   "ref": {
+    "value": "2024-06-04",
+    "sourceType": "note",
+    "clioId": "100003",
+    "sourceDate": "2024-06-10",
+    "quote": "Left shoulder arthroscopy performed 2024-06-04",
+    "drawerKey": "note:100003",
+    "derivation": "stated",
+    "quoteVerified": true
+   }
+  }
+ ],
+ "totalItems": 37,
+ "actionBoard": {
+  "overdue": [
+   {
+    "id": "task:100040",
+    "title": "Lakeview Orthopaedics: records and right knee surgical date",
+    "due": "2026-08-30",
+    "owner": "Alex Counsel",
+    "origin": "clio-task",
+    "daysLate": 33,
+    "waitingOn": {
+     "name": "Lakeview Orthopaedics PLLC",
+     "contactId": "810002",
+     "kind": "provider",
+     "requests": 3,
+     "daysSilent": 31
+    },
+    "refs": [
+     {
+      "value": "2026-08-30",
+      "sourceType": "task",
+      "clioId": "100040",
+      "sourceDate": "2026-08-30",
+      "quote": null,
+      "drawerKey": "task:100040",
+      "derivation": "clio-metadata",
+      "quoteVerified": false
+     }
+    ]
+   },
+   {
+    "id": "task:100041",
+    "title": "Client: employment records",
+    "due": "2026-09-28",
+    "owner": "Alex Counsel",
+    "origin": "clio-task",
+    "daysLate": 4,
+    "waitingOn": {
+     "name": "Jane Doe",
+     "contactId": "800001",
+     "kind": "client",
+     "requests": 1,
+     "daysSilent": 10
+    },
+    "refs": [
+     {
+      "value": "2026-09-28",
+      "sourceType": "task",
+      "clioId": "100041",
+      "sourceDate": "2026-09-28",
+      "quote": null,
+      "drawerKey": "task:100041",
+      "derivation": "clio-metadata",
+      "quoteVerified": false
+     }
+    ]
+   }
+  ],
+  "upcoming": [
+   {
+    "id": "task:100042",
+    "title": "Riverside PT: itemized ledger",
+    "due": "2026-10-09",
+    "owner": "Alex Counsel",
+    "origin": "clio-task",
+    "daysUntil": 7,
+    "refs": [
+     {
+      "value": "2026-10-09",
+      "sourceType": "task",
+      "clioId": "100042",
+      "sourceDate": "2026-10-09",
+      "quote": null,
+      "drawerKey": "task:100042",
+      "derivation": "clio-metadata",
+      "quoteVerified": false
+     }
+    ]
+   },
+   {
+    "id": "calendar_entry:100050",
+    "title": "Compliance conference",
+    "due": "2026-10-21",
+    "owner": null,
+    "origin": "clio-calendar",
+    "daysUntil": 19,
+    "refs": [
+     {
+      "value": "2026-10-21",
+      "sourceType": "calendar_entry",
+      "clioId": "100050",
+      "sourceDate": "2026-10-21",
+      "quote": null,
+      "drawerKey": "calendar_entry:100050",
+      "derivation": "clio-metadata",
+      "quoteVerified": false
+     }
+    ]
+   }
+  ],
+  "waiting": [
+   {
+    "id": "task:100040",
+    "title": "Lakeview Orthopaedics: records and right knee surgical date",
+    "due": "2026-08-30",
+    "owner": "Alex Counsel",
+    "origin": "clio-task",
+    "waitingOn": {
+     "name": "Lakeview Orthopaedics PLLC",
+     "contactId": "810002",
+     "kind": "provider",
+     "requests": 3,
+     "daysSilent": 31
+    },
+    "refs": [
+     {
+      "value": "2026-08-30",
+      "sourceType": "task",
+      "clioId": "100040",
+      "sourceDate": "2026-08-30",
+      "quote": null,
+      "drawerKey": "task:100040",
+      "derivation": "clio-metadata",
+      "quoteVerified": false
+     }
+    ]
+   }
+  ],
+  "suggested": []
+ },
+ "timeline": [
+  {
+   "id": "t1",
+   "date": "2024-03-10",
+   "derivation": "clio-metadata",
+   "title": "Incident",
+   "category": "incident",
+   "milestone": true,
+   "refs": [
+    {
+     "value": "2024-03-10",
+     "sourceType": "custom_field",
+     "clioId": "date-30001",
+     "sourceDate": null,
+     "quote": null,
+     "drawerKey": "custom_field:date-30001",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "id": "t2",
+   "date": "2024-03-15",
+   "derivation": "clio-metadata",
+   "title": "Firm retained",
+   "category": "legal",
+   "milestone": true,
+   "refs": [
+    {
+     "value": "2024-03-15",
+     "sourceType": "calendar_entry",
+     "clioId": "100046",
+     "sourceDate": "2024-03-15",
+     "quote": null,
+     "drawerKey": "calendar_entry:100046",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "id": "t3",
+   "date": "2024-06-04",
+   "derivation": "stated",
+   "title": "Left shoulder surgery",
+   "category": "treatment",
+   "milestone": true,
+   "refs": [
+    {
+     "value": "2024-06-04",
+     "sourceType": "note",
+     "clioId": "100003",
+     "sourceDate": "2024-06-10",
+     "quote": "Left shoulder arthroscopy performed 2024-06-04",
+     "drawerKey": "note:100003",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "id": "t4",
+   "date": "2025-03-01",
+   "derivation": "clio-metadata",
+   "title": "Suit filed",
+   "category": "legal",
+   "milestone": true,
+   "refs": [
+    {
+     "value": "2025-03-01",
+     "sourceType": "calendar_entry",
+     "clioId": "100048",
+     "sourceDate": "2025-03-01",
+     "quote": null,
+     "drawerKey": "calendar_entry:100048",
+     "derivation": "clio-metadata",
+     "quoteVerified": false
+    }
+   ]
+  },
+  {
+   "id": "t5",
+   "date": "2026-09-05",
+   "derivation": "stated",
+   "title": "Coverage confirmed",
+   "category": "insurance",
+   "milestone": true,
+   "refs": [
+    {
+     "value": "$250,000/$500,000",
+     "sourceType": "note",
+     "clioId": "100007",
+     "sourceDate": "2026-09-05",
+     "quote": "liability limits $250,000/$500,000",
+     "drawerKey": "note:100007",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  },
+  {
+   "id": "t6",
+   "date": "2026-09-28",
+   "derivation": "clio-metadata",
+   "title": "Call with client",
+   "category": "communication",
+   "milestone": false,
+   "refs": [
+    {
+     "value": "2026-09-28",
+     "sourceType": "communication",
+     "clioId": "100030",
+     "sourceDate": "2026-09-28",
+     "quote": "Jane called: asked whether to keep PT twice weekly",
+     "drawerKey": "communication:100030",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  }
+ ],
+ "injuries": [
+  {
+   "name": "Left shoulder labral tear",
+   "bodyPart": "Left shoulder",
+   "status": "surgery-done",
+   "firstDocumented": "2024-06-04",
+   "refs": [
+    {
+     "value": "Left shoulder labral tear",
+     "sourceType": "document",
+     "clioId": "100060",
+     "sourceDate": "2025-06-01",
+     "quote": "TEAR OF THE ANTERIOR SUPERIOR LABRUM",
+     "drawerKey": "document:100060#p2",
+     "derivation": "stated",
+     "quoteVerified": true,
+     "page": 2
+    }
+   ]
+  },
+  {
+   "name": "Right knee medial meniscus tear",
+   "bodyPart": "Right knee",
+   "status": "surgery-recommended",
+   "firstDocumented": null,
+   "refs": [
+    {
+     "value": "Right knee meniscus tear",
+     "sourceType": "document",
+     "clioId": "100060",
+     "sourceDate": "2025-06-01",
+     "quote": "TEAR OF THE MEDIAL MENISCUS",
+     "drawerKey": "document:100060#p3",
+     "derivation": "stated",
+     "quoteVerified": true,
+     "page": 3
+    }
+   ]
+  }
+ ],
+ "stage": {
+  "key": "discovery",
+  "label": "In litigation (discovery)",
+  "evidence": [
+   {
+    "value": "2026-10-21",
+    "sourceType": "calendar_entry",
+    "clioId": "100050",
+    "sourceDate": "2026-10-21",
+    "quote": null,
+    "drawerKey": "calendar_entry:100050",
+    "derivation": "clio-metadata",
+    "quoteVerified": false
+   }
+  ],
+  "inferred": true
+ },
+ "openQuestions": [
+  {
+   "text": "When will the right knee surgery be scheduled?",
+   "refs": [
+    {
+     "value": "Case posture",
+     "sourceType": "note",
+     "clioId": "100008",
+     "sourceDate": "2026-09-20",
+     "quote": "right knee surgery still undated after 4 requests to Lakeview",
+     "drawerKey": "note:100008",
+     "derivation": "stated",
+     "quoteVerified": true
+    }
+   ]
+  }
+ ],
+ "changeFeed": [
+  {
+   "kind": "new",
+   "sourceType": "note",
+   "clioId": "100008",
+   "title": "Case posture",
+   "sourceDate": "2026-09-20",
+   "detectedAt": "2026-10-02T10:00:00Z",
+   "drawerKey": "note:100008"
+  }
+ ],
+ "meta": {
+  "models": {
+   "synth": "claude-sonnet-5-5",
+   "extract": "claude-haiku-4-5"
+  },
+  "costUsd": 0.21,
+  "droppedRefs": 1,
+  "droppedClaims": 0,
+  "warnings": [],
+  "builtAt": "2026-10-02T11:00:00Z",
+  "cached": true
+ }
+}

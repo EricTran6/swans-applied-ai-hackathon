@@ -1,0 +1,122 @@
+[
+ {
+  "id": 100014,
+  "etag": "\"186afe7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Intake summary",
+  "detail": "Met Jane Doe. Rear-ended at a red light on Main St &amp; 2nd Ave. ER next day: neck and left shoulder pain. She&#39;s treating at Riverside Physical Therapy.",
+  "detail_text_type": "plain_text",
+  "date": "2024-03-15",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100016,
+  "etag": "\"186b1e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Insurance",
+  "detail": "Acme Delivery Corp is self-insured; no declared limit. Adjuster at Claims Service Group.",
+  "detail_text_type": "plain_text",
+  "date": "2024-03-20",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100018,
+  "etag": "\"186b3e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Post-op",
+  "detail": "Left shoulder arthroscopy performed 2024-06-04 by Lakeview Orthopaedics (DOI + 86). Recovery on track.",
+  "detail_text_type": "plain_text",
+  "date": "2024-06-10",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100020,
+  "etag": "\"186b5e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Specials tally",
+  "detail": "Specials to date $41,250: Riverside PT $12,000; Lakeview Orthopaedics $26,500; Harbor Chiropractic $2,750. Ledgers unreconciled.",
+  "detail_text_type": "plain_text",
+  "date": "2025-01-12",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100022,
+  "etag": "\"186b7e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Medicaid lien",
+  "detail": "State Medicaid asserted a lien of $9,400. Will negotiate at the end.",
+  "detail_text_type": "plain_text",
+  "date": "2025-02-02",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100024,
+  "etag": "\"186b9e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Case evaluation",
+  "detail": "Value estimate $600,000. Recovery capped by the $250,000 liability limit. Do not share with providers.",
+  "detail_text_type": "plain_text",
+  "date": "2026-06-01",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100026,
+  "etag": "\"186bbe7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Coverage",
+  "detail": "Adjuster confirmed in writing: liability limits $250,000/$500,000. Supersedes the self-insured note.",
+  "detail_text_type": "plain_text",
+  "date": "2026-09-05",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ },
+ {
+  "id": 100028,
+  "etag": "\"186bde7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Case posture",
+  "detail": "Read before the next conference. Liability: rear-end, clear. Causation disputed by the IME. Open: right knee surgery still undated after 4 requests to Lakeview; Riverside ledger not updated since 2025-01. Settlement strategy: hold for limits.",
+  "detail_text_type": "plain_text",
+  "date": "2026-09-20",
+  "matter": {
+   "id": 900001
+  },
+  "contact": null,
+  "time_entries": []
+ }
+]

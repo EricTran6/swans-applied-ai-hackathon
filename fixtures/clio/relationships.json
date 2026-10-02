@@ -1,0 +1,114 @@
+[
+ {
+  "id": 100000,
+  "etag": "\"186a1e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Treating provider, physical therapy",
+  "contact": {
+   "id": 810001,
+   "name": "Riverside Physical Therapy",
+   "type": "Company"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ },
+ {
+  "id": 100002,
+  "etag": "\"186a3e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Treating provider, orthopaedic surgery",
+  "contact": {
+   "id": 810002,
+   "name": "Lakeview Orthopaedics PLLC",
+   "type": "Company"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ },
+ {
+  "id": 100004,
+  "etag": "\"186a5e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Treating provider, chiropractic",
+  "contact": {
+   "id": 810003,
+   "name": "Harbor Chiropractic",
+   "type": "Company"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ },
+ {
+  "id": 100006,
+  "etag": "\"186a7e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Adverse driver",
+  "contact": {
+   "id": 820001,
+   "name": "Robert Smith",
+   "type": "Person"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ },
+ {
+  "id": 100008,
+  "etag": "\"186a9e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Adverse party, vehicle owner (self-insured)",
+  "contact": {
+   "id": 820002,
+   "name": "Acme Delivery Corp",
+   "type": "Company"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ },
+ {
+  "id": 100010,
+  "etag": "\"186abe7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Third-party administrator and adjuster",
+  "contact": {
+   "id": 820003,
+   "name": "Claims Service Group",
+   "type": "Company"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ },
+ {
+  "id": 100012,
+  "etag": "\"186ade7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "description": "Client no-fault insurer",
+  "contact": {
+   "id": 820004,
+   "name": "Safeway Mutual Insurance",
+   "type": "Company"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  }
+ }
+]

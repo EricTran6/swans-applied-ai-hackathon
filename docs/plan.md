@@ -66,6 +66,28 @@ Cut entirely: Clio per-record deep links, vision on scans, body-map graphic, web
 - Also list this in `docs/submission.md` ("hardcoded / half-done") if it is not fixed before 4:00 PM.
 - Docs that name the case (`docs/research/stories/`, this file) are research notes, not runtime code; `docs/research/sapini-data-profile.md` is gitignored.
 
+## v2.1 additions (the 15 review gaps, approved 2026-10-02)
+
+| # | Gap | Owner task (docs/orchestration.md) |
+|---|---|---|
+| 1 | Clio connect: OAuth start/callback routes + token store (DB, env fallback), README steps | T07 |
+| 2 | In-app PDF download (per document version) + text extraction with pdfjs-dist (no poppler) | T01 |
+| 3 | Injury-source document picked generically (name/folder patterns, Haiku first-page fallback), never by name in code | T03 |
+| 4 | Provider bill rows matched to provider contacts (filename/note vs relationship names), unit-tested | T01 |
+| 5 | "Refresh from Clio" button + `sync_runs` status ("last synced X ago", progress) | T04 (API) + T09 (UI) |
+| 6 | `scripts/clio_dump.py` matter id from CLI/env | T08 (done, merged) |
+| 7 | Provider replies: "Sent / will send by…" per need + short note, stored in `share_responses`, shown to attorney | T05 (lib) + T04 (API) + T11 (UI) |
+| 8 | Attorney note to provider in the builder (`ProviderView.attorneyNote`) | T05 + T11 |
+| 9 | Story strip: horizontal milestone timeline (`TimelineEvent.milestone`) | T02 (data) + T09 (UI) |
+| 10 | `/` matter picker from `GET /api/matters` | T09 |
+| 11 | Provider bills by provider bar (attorney only, `Digest.providerBills`) | T02 + T09 |
+| 12 | Known limit: attorney dashboard has no login (localhost) | T12 (docs) |
+| 13 | Known limit: no push/email "case moved" alerts | T12 |
+| 14 | Known limit: 15 scanned pages not OCR'd; Clio per-record links unused | T12 |
+| 15 | Repo: work on `main`, push early/often; judges read `main` | lead |
+
+Contract deltas from section "Contract deltas" are applied in `src/lib/types.ts` and `docs/contract.md` section 10. Seam stubs exist for every module so each branch compiles alone.
+
 ## Contract deltas (lead applies to `docs/contract.md` + `src/lib/types.ts` before fan-out)
 
 1. `SourceRef.clioUrl` → optional; add `drawerKey: string` (`"note:123"`, `"document:55#p3"`). The UI opens the drawer, and the matter URL is in the header.

@@ -1,0 +1,146 @@
+[
+ {
+  "id": 100075,
+  "etag": "\"d1\"",
+  "name": "01-intake__hipaa-authorization.pdf",
+  "type": "Document",
+  "filename": "01-intake__hipaa-authorization.pdf",
+  "content_type": "application/pdf",
+  "size": 4000,
+  "document_category": null,
+  "parent": {
+   "id": 51001,
+   "type": "Folder",
+   "name": "01 Intake"
+  },
+  "matter": {
+   "id": 900001
+  },
+  "creator": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "received_at": "2024-03-15T00:00:00-07:00",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "locked": false,
+  "latest_document_version": {
+   "id": 100076,
+   "filename": "01-intake__hipaa-authorization.pdf",
+   "size": 4000,
+   "content_type": "application/pdf",
+   "received_at": "2024-03-15T00:00:00-07:00",
+   "fully_uploaded": true,
+   "created_at": "2026-10-02T10:00:00-07:00",
+   "uuid": "uuid-100075"
+  }
+ },
+ {
+  "id": 100076,
+  "etag": "\"d1\"",
+  "name": "02-pleadings__bill-of-particulars.pdf",
+  "type": "Document",
+  "filename": "02-pleadings__bill-of-particulars.pdf",
+  "content_type": "application/pdf",
+  "size": 4000,
+  "document_category": null,
+  "parent": {
+   "id": 51002,
+   "type": "Folder",
+   "name": "02 Pleadings"
+  },
+  "matter": {
+   "id": 900001
+  },
+  "creator": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "received_at": "2025-06-01T00:00:00-07:00",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "locked": false,
+  "latest_document_version": {
+   "id": 100077,
+   "filename": "02-pleadings__bill-of-particulars.pdf",
+   "size": 4000,
+   "content_type": "application/pdf",
+   "received_at": "2025-06-01T00:00:00-07:00",
+   "fully_uploaded": true,
+   "created_at": "2026-10-02T10:00:00-07:00",
+   "uuid": "uuid-100076"
+  }
+ },
+ {
+  "id": 100077,
+  "etag": "\"d1\"",
+  "name": "04-medical-records__riverside-physical-therapy-records.pdf",
+  "type": "Document",
+  "filename": "04-medical-records__riverside-physical-therapy-records.pdf",
+  "content_type": "application/pdf",
+  "size": 4000,
+  "document_category": null,
+  "parent": {
+   "id": 51004,
+   "type": "Folder",
+   "name": "04 Medical Records"
+  },
+  "matter": {
+   "id": 900001
+  },
+  "creator": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "received_at": "2025-01-15T00:00:00-07:00",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "locked": false,
+  "latest_document_version": {
+   "id": 100078,
+   "filename": "04-medical-records__riverside-physical-therapy-records.pdf",
+   "size": 4000,
+   "content_type": "application/pdf",
+   "received_at": "2025-01-15T00:00:00-07:00",
+   "fully_uploaded": true,
+   "created_at": "2026-10-02T10:00:00-07:00",
+   "uuid": "uuid-100077"
+  }
+ },
+ {
+  "id": 100078,
+  "etag": "\"d1\"",
+  "name": "05-medical-bills__riverside-physical-therapy-bill.pdf",
+  "type": "Document",
+  "filename": "05-medical-bills__riverside-physical-therapy-bill.pdf",
+  "content_type": "application/pdf",
+  "size": 4000,
+  "document_category": null,
+  "parent": {
+   "id": 51005,
+   "type": "Folder",
+   "name": "05 Medical Bills"
+  },
+  "matter": {
+   "id": 900001
+  },
+  "creator": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "received_at": "2025-01-10T00:00:00-07:00",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "locked": false,
+  "latest_document_version": {
+   "id": 100079,
+   "filename": "05-medical-bills__riverside-physical-therapy-bill.pdf",
+   "size": 4000,
+   "content_type": "application/pdf",
+   "received_at": "2025-01-10T00:00:00-07:00",
+   "fully_uploaded": true,
+   "created_at": "2026-10-02T10:00:00-07:00",
+   "uuid": "uuid-100078"
+  }
+ }
+]

@@ -1,0 +1,176 @@
+[
+ {
+  "id": 100046,
+  "etag": "\"186cfe7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "name": "Limitations Date",
+  "description": "Statute of limitations. Satisfied: suit commenced within time.",
+  "priority": "normal",
+  "status": "complete",
+  "statute_of_limitations": true,
+  "due_at": "2026-03-01",
+  "completed_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "assignee": {
+   "id": 700001,
+   "name": "Alex Counsel",
+   "type": "User"
+  },
+  "assigner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "task_type": null,
+  "permission": "owner"
+ },
+ {
+  "id": 100048,
+  "etag": "\"186d1e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "name": "By medical provider: Lakeview Orthopaedics PLLC - records and right knee surgical date",
+  "description": "4 requests so far.",
+  "priority": "normal",
+  "status": "pending",
+  "statute_of_limitations": false,
+  "due_at": "2026-08-30",
+  "completed_at": null,
+  "reminders": [],
+  "assignee": {
+   "id": 700001,
+   "name": "Alex Counsel",
+   "type": "User"
+  },
+  "assigner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "task_type": null,
+  "permission": "owner"
+ },
+ {
+  "id": 100050,
+  "etag": "\"186d3e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "name": "By client: employment records",
+  "description": "Client to send pay stubs.",
+  "priority": "normal",
+  "status": "pending",
+  "statute_of_limitations": false,
+  "due_at": "2026-09-28",
+  "completed_at": null,
+  "reminders": [],
+  "assignee": {
+   "id": 700001,
+   "name": "Alex Counsel",
+   "type": "User"
+  },
+  "assigner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "task_type": null,
+  "permission": "owner"
+ },
+ {
+  "id": 100052,
+  "etag": "\"186d5e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "name": "By medical provider: Riverside Physical Therapy - itemized ledger",
+  "description": "Ledger since Jan 2025.",
+  "priority": "normal",
+  "status": "pending",
+  "statute_of_limitations": false,
+  "due_at": "2026-10-09",
+  "completed_at": null,
+  "reminders": [],
+  "assignee": {
+   "id": 700001,
+   "name": "Alex Counsel",
+   "type": "User"
+  },
+  "assigner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "task_type": null,
+  "permission": "owner"
+ },
+ {
+  "id": 100054,
+  "etag": "\"186d7e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "name": "Prepare for compliance conference",
+  "description": "",
+  "priority": "normal",
+  "status": "pending",
+  "statute_of_limitations": false,
+  "due_at": "2026-10-20",
+  "completed_at": null,
+  "reminders": [],
+  "assignee": {
+   "id": 700001,
+   "name": "Alex Counsel",
+   "type": "User"
+  },
+  "assigner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "task_type": null,
+  "permission": "owner"
+ },
+ {
+  "id": 100056,
+  "etag": "\"186d9e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "name": "Request ER records",
+  "description": "",
+  "priority": "normal",
+  "status": "complete",
+  "statute_of_limitations": false,
+  "due_at": "2024-04-01",
+  "completed_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "assignee": {
+   "id": 700001,
+   "name": "Alex Counsel",
+   "type": "User"
+  },
+  "assigner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "task_type": null,
+  "permission": "owner"
+ }
+]

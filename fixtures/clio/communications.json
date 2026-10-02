@@ -1,0 +1,290 @@
+[
+ {
+  "id": 100030,
+  "etag": "\"186bfe7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Photos of paperwork",
+  "body": "Attached are photos of the exchange of information sheet. Jane",
+  "type": "EmailCommunication",
+  "date": "2024-03-16",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 800001,
+    "name": "Jane Doe",
+    "type": "Person"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100032,
+  "etag": "\"186c1e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Records request",
+  "body": "Please send updated records and the surgical date for the right knee.",
+  "type": "EmailCommunication",
+  "date": "2026-07-01",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 810002,
+    "name": "Lakeview Orthopaedics PLLC",
+    "type": "Company"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100034,
+  "etag": "\"186c3e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "RE: Records request",
+  "body": "Second request: updated records and the right knee surgical date.",
+  "type": "EmailCommunication",
+  "date": "2026-08-01",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 810002,
+    "name": "Lakeview Orthopaedics PLLC",
+    "type": "Company"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100036,
+  "etag": "\"186c5e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "RE: Records request",
+  "body": "Third request for the right knee surgical date.",
+  "type": "EmailCommunication",
+  "date": "2026-09-01",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 810002,
+    "name": "Lakeview Orthopaedics PLLC",
+    "type": "Company"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100038,
+  "etag": "\"186c7e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Ledger request",
+  "body": "Please send an itemized ledger for services after January 2025.",
+  "type": "EmailCommunication",
+  "date": "2026-09-10",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 810001,
+    "name": "Riverside Physical Therapy",
+    "type": "Company"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100040,
+  "etag": "\"186c9e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Call with client",
+  "body": "Jane called: asked whether to keep PT twice weekly; still out of work.",
+  "type": "PhoneCommunication",
+  "date": "2026-09-28",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 800001,
+    "name": "Jane Doe",
+    "type": "Person"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100042,
+  "etag": "\"186cbe7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Status update",
+  "body": "Wrote to Jane with the conference date; no reply yet.",
+  "type": "EmailCommunication",
+  "date": "2026-09-22",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 800001,
+    "name": "Jane Doe",
+    "type": "Person"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ },
+ {
+  "id": 100044,
+  "etag": "\"186cde7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "subject": "Adjuster",
+  "body": "Limits confirmed at $250,000/$500,000.",
+  "type": "EmailCommunication",
+  "date": "2026-09-04",
+  "received_at": null,
+  "external_properties": [],
+  "senders": [
+   {
+    "id": 820003,
+    "name": "Claims Service Group",
+    "type": "Company"
+   }
+  ],
+  "receivers": [
+   {
+    "id": 700001,
+    "name": "Alex Counsel",
+    "type": "User"
+   }
+  ],
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "time_entries": [],
+  "documents": []
+ }
+]

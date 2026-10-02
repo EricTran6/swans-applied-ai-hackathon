@@ -300,3 +300,17 @@ Default preset (editable per share, stored as `preset_json`):
 | liability analysis, firm_expenses, other_liens (incl. Medicaid lien), client_pii (SSN, DOB, wages) | deny (toggle) |
 
 Rules: `ProviderView` contains no Clio ids, no clioUrls, no quotes from notes, no dollar figures except coverage limits. It is frozen at send time (snapshot, not live). AI flags (Haiku, enum output) can only lower inclusion (`review`/`block`), never raise it; keyword fallback (`settle|offer|demand|strategy|privileged|valuation|lien`) if the AI call fails. Tokens: `crypto.randomBytes(32).toString('base64url')`, stored as sha256, compared with `timingSafeEqual`.
+
+## 10. v2 deltas (authoritative: `src/lib/types.ts`)
+
+`src/lib/types.ts` is the source of truth and supersedes sections 3, 4, 7 and 9 where they differ. Summary:
+- `RecordBase`: `drawerKey` ("note:123"), optional `clioUrl`, `etag`; `contentHash` from projected fields/etag, never `updatedAt` (all timestamps are seed time).
+- `Expense.kind` = `firm` (total set) | `provider_bill` (total null, `non_billable_total` set); `amount`, `providerContactId`, `billFilename`. Split by shape, never by the string "DEMO".
+- `Contact.roleKind` from the relationship description; `Task.isSol`; `Matter.sol`.
+- `DocumentText` per document version (pdfjs-dist); tables `document_texts`, `sync_runs`, `oauth_tokens`, `share_responses` added to `schema.sql`.
+- Digest adds `client` (ClientSnapshot), `valueWaterfall`, `providerBills`, `TimelineEvent.milestone`, `RankedItem.score` (code-ranked), `ActionItem.waitingOn`, `Kpi.conflicts`, `Injury.status`, `header.sol.status`.
+- AI seams: `ExtractedFacts` (coverage/value/liens with validated refs) feeds deterministic `computeDeterministic()`; `SynthesisOutput` holds brief, why-lines, open questions, status chips.
+- Share: `ShareCandidate.providerContactId`; `ProviderView` adds `attorneyNote`, `needs`, `bill` (own bill only), `coverage.confirmed`, optional `careTeam`/`findings`; `ShareResponse` for provider replies. Dollar rule: no dollars except the recipient's own bill, and coverage limits only when the attorney toggles them on.
+- Seams (stubs in place): `src/lib/{clio,pdf,ingest,auth,digest,ai,db,share}/index.ts`. Owners replace stubs; exported signatures are fixed.
+- New API routes: `POST /api/sync {matterId}` -> 202 + `GET /api/sync?matterId=` -> `SyncStatus`; `GET /api/auth/clio/start`, `GET /api/auth/clio/callback`; `POST /api/share/[token]/respond {needId?, kind, promisedDate?, text?}` -> 204; `GET /api/documents/[id]/file` serves the cached PDF (matter-scoped); `GET /api/source?drawerKey=` -> `{ record, documentText? }`.
+- Fixtures (synthetic, fake client): `fixtures/clio/*.json` (raw Clio shapes, same filenames as `.cache/clio`), `fixtures/documents/bill-of-particulars-sample.pdf`, `fixtures/sample-digest.json`, `fixtures/sample-provider-view.json`. Regenerate with `python3 fixtures/make_fixtures.py && python3 fixtures/make_sample_digest.py`.

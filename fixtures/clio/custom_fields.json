@@ -1,0 +1,130 @@
+[
+ {
+  "id": 30001,
+  "name": "Date of Incident",
+  "field_type": "date",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30002,
+  "name": "Accident Location",
+  "field_type": "text_line",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30003,
+  "name": "Insurance Carrier",
+  "field_type": "text_line",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30004,
+  "name": "Claim Number",
+  "field_type": "text_line",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30005,
+  "name": "Case Summary",
+  "field_type": "text_area",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30006,
+  "name": "Policy Limits",
+  "field_type": "text_area",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30007,
+  "name": "Policy Limits Confirmed",
+  "field_type": "checkbox",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30008,
+  "name": "Estimated Case Value",
+  "field_type": "currency",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30009,
+  "name": "Case Value Rationale",
+  "field_type": "text_area",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30010,
+  "name": "Medical Specials To Date",
+  "field_type": "currency",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30011,
+  "name": "Wage Loss Claimed",
+  "field_type": "text_line",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30012,
+  "name": "Liability Assessment",
+  "field_type": "text_area",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30013,
+  "name": "Treatment Status",
+  "field_type": "text_line",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30014,
+  "name": "Health Insurance or Lien Holder",
+  "field_type": "text_line",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30015,
+  "name": "Prior Related Injuries",
+  "field_type": "text_area",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ },
+ {
+  "id": 30016,
+  "name": "HIPAA Authorization Received",
+  "field_type": "checkbox",
+  "parent_type": "Matter",
+  "displayed": true,
+  "required": false
+ }
+]

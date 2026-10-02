@@ -1,0 +1,132 @@
+[
+ {
+  "id": "100058",
+  "etag": "\"c1\"",
+  "summary": "Initial consultation, Jane Doe",
+  "description": "",
+  "location": null,
+  "start_at": "2024-03-15T09:00:00-07:00",
+  "end_at": null,
+  "all_day": true,
+  "recurrence_rule": null,
+  "calendar_entry_event_type": null,
+  "calendar_owner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "attendees": [],
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "external_properties": [],
+  "permission": "owner"
+ },
+ {
+  "id": "100059",
+  "etag": "\"c1\"",
+  "summary": "Left shoulder arthroscopy (Lakeview Orthopaedics)",
+  "description": "",
+  "location": null,
+  "start_at": "2024-06-04T08:00:00-07:00",
+  "end_at": null,
+  "all_day": true,
+  "recurrence_rule": null,
+  "calendar_entry_event_type": null,
+  "calendar_owner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "attendees": [],
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "external_properties": [],
+  "permission": "owner"
+ },
+ {
+  "id": "100060",
+  "etag": "\"c1\"",
+  "summary": "Suit filed",
+  "description": "",
+  "location": null,
+  "start_at": "2025-03-01T09:00:00-07:00",
+  "end_at": null,
+  "all_day": true,
+  "recurrence_rule": null,
+  "calendar_entry_event_type": null,
+  "calendar_owner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "attendees": [],
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "external_properties": [],
+  "permission": "owner"
+ },
+ {
+  "id": "100061",
+  "etag": "\"c1\"",
+  "summary": "Client treatment: Riverside PT",
+  "description": "",
+  "location": null,
+  "start_at": "2026-10-06T10:00:00-07:00",
+  "end_at": null,
+  "all_day": true,
+  "recurrence_rule": null,
+  "calendar_entry_event_type": null,
+  "calendar_owner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "attendees": [],
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "external_properties": [],
+  "permission": "owner"
+ },
+ {
+  "id": "100062",
+  "etag": "\"c1\"",
+  "summary": "Compliance conference",
+  "description": "",
+  "location": null,
+  "start_at": "2026-10-21T09:30:00-07:00",
+  "end_at": null,
+  "all_day": true,
+  "recurrence_rule": null,
+  "calendar_entry_event_type": null,
+  "calendar_owner": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "attendees": [],
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "reminders": [],
+  "external_properties": [],
+  "permission": "owner"
+ }
+]

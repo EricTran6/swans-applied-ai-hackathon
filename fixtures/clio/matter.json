@@ -1,0 +1,199 @@
+{
+ "id": 900001,
+ "etag": "\"m42e7a\"",
+ "display_number": "00042-Doe",
+ "description": "Doe, Jane - MVA (Main St & 2nd Ave, Springfield)",
+ "status": "Open",
+ "open_date": "2024-03-15",
+ "close_date": null,
+ "pending_date": null,
+ "billable": true,
+ "location": null,
+ "client_reference": null,
+ "maildrop_address": null,
+ "created_at": "2026-10-02T10:00:00-07:00",
+ "updated_at": "2026-10-02T10:00:00-07:00",
+ "client_id": 800001,
+ "client": {
+  "id": 800001,
+  "name": "Jane Doe",
+  "type": "Person",
+  "first_name": "Jane",
+  "last_name": "Doe"
+ },
+ "practice_area": {
+  "id": 1,
+  "name": "Personal Injury"
+ },
+ "responsible_attorney": {
+  "id": 700001,
+  "name": "Alex Counsel"
+ },
+ "originating_attorney": {
+  "id": 700001,
+  "name": "Alex Counsel"
+ },
+ "responsible_staff": null,
+ "matter_stage": {
+  "id": 5,
+  "name": "Litigation"
+ },
+ "statute_of_limitations": {
+  "id": 1,
+  "due_at": "2027-03-10",
+  "status": "complete"
+ },
+ "group": null,
+ "billing_method": "contingency",
+ "account_balances": [],
+ "folder": {
+  "id": 50000,
+  "name": "00042-Doe"
+ },
+ "custom_field_values": [
+  {
+   "id": "date-30001",
+   "field_name": "Date of Incident",
+   "field_type": "date",
+   "value": "2024-03-10",
+   "custom_field": {
+    "id": 30001
+   }
+  },
+  {
+   "id": "text_line-30002",
+   "field_name": "Accident Location",
+   "field_type": "text_line",
+   "value": "Main St & 2nd Ave, Springfield",
+   "custom_field": {
+    "id": 30002
+   }
+  },
+  {
+   "id": "text_line-30003",
+   "field_name": "Insurance Carrier",
+   "field_type": "text_line",
+   "value": "SELF-INSURED (Acme Delivery Corp); TPA Claims Service Group",
+   "custom_field": {
+    "id": 30003
+   }
+  },
+  {
+   "id": "text_line-30004",
+   "field_name": "Claim Number",
+   "field_type": "text_line",
+   "value": "CSG-000123",
+   "custom_field": {
+    "id": 30004
+   }
+  },
+  {
+   "id": "text_area-30005",
+   "field_name": "Case Summary",
+   "field_type": "text_area",
+   "value": "Rear-ended at a red light by a delivery van. Left shoulder surgery; right knee recommended.",
+   "custom_field": {
+    "id": 30005
+   }
+  },
+  {
+   "id": "text_area-30006",
+   "field_name": "Policy Limits",
+   "field_type": "text_area",
+   "value": "Defendant liability $250,000/$500,000; client UM/UIM $50,000/$100,000; no-fault $50,000",
+   "custom_field": {
+    "id": 30006
+   }
+  },
+  {
+   "id": "checkbox-30007",
+   "field_name": "Policy Limits Confirmed",
+   "field_type": "checkbox",
+   "value": true,
+   "custom_field": {
+    "id": 30007
+   }
+  },
+  {
+   "id": "currency-30008",
+   "field_name": "Estimated Case Value",
+   "field_type": "currency",
+   "value": 600000,
+   "custom_field": {
+    "id": 30008
+   }
+  },
+  {
+   "id": "text_area-30009",
+   "field_name": "Case Value Rationale",
+   "field_type": "text_area",
+   "value": "Surgery plus second surgery recommended; capped by the liability limit.",
+   "custom_field": {
+    "id": 30009
+   }
+  },
+  {
+   "id": "currency-30010",
+   "field_name": "Medical Specials To Date",
+   "field_type": "currency",
+   "value": 41250,
+   "custom_field": {
+    "id": 30010
+   }
+  },
+  {
+   "id": "text_line-30011",
+   "field_name": "Wage Loss Claimed",
+   "field_type": "text_line",
+   "value": "$38,000",
+   "custom_field": {
+    "id": 30011
+   }
+  },
+  {
+   "id": "text_area-30012",
+   "field_name": "Liability Assessment",
+   "field_type": "text_area",
+   "value": "Clear liability on the rear-end; defense disputes causation.",
+   "custom_field": {
+    "id": 30012
+   }
+  },
+  {
+   "id": "text_line-30013",
+   "field_name": "Treatment Status",
+   "field_type": "text_line",
+   "value": "Active: PT twice weekly",
+   "custom_field": {
+    "id": 30013
+   }
+  },
+  {
+   "id": "text_line-30014",
+   "field_name": "Health Insurance or Lien Holder",
+   "field_type": "text_line",
+   "value": "State Medicaid lien $9,400",
+   "custom_field": {
+    "id": 30014
+   }
+  },
+  {
+   "id": "text_area-30015",
+   "field_name": "Prior Related Injuries",
+   "field_type": "text_area",
+   "value": "Prior right knee sprain 2019, resolved.",
+   "custom_field": {
+    "id": 30015
+   }
+  },
+  {
+   "id": "checkbox-30016",
+   "field_name": "HIPAA Authorization Received",
+   "field_type": "checkbox",
+   "value": true,
+   "custom_field": {
+    "id": 30016
+   }
+  }
+ ]
+}

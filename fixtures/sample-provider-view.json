@@ -1,0 +1,68 @@
+{
+ "firmName": "Example Law Firm",
+ "recipientLabel": "Riverside Physical Therapy",
+ "clientDisplayName": "Jane D.",
+ "attorneyNote": "Thanks for treating Jane. The updated ledger is the main thing we need this month.",
+ "status": {
+  "label": "Active",
+  "alive": "active",
+  "lastFirmActivity": "2026-09-28",
+  "nextEvent": "2026-10-21"
+ },
+ "stage": {
+  "label": "In litigation"
+ },
+ "coverage": {
+  "confirmed": true,
+  "confirmedOn": "2026-09-05",
+  "layers": null
+ },
+ "needs": [
+  {
+   "id": "task:100042",
+   "text": "Send an itemized ledger for services after January 2025",
+   "due": "2026-10-09"
+  }
+ ],
+ "bill": {
+  "amount": 12000,
+  "servicesThrough": "2025-01-08",
+  "stale": true
+ },
+ "appointments": [
+  {
+   "title": "Client treatment",
+   "date": "2026-10-06"
+  }
+ ],
+ "records": [
+  {
+   "name": "Physical therapy records",
+   "date": "2025-01-15"
+  }
+ ],
+ "updates": [
+  {
+   "date": "2026-09-05",
+   "text": "Insurance coverage confirmed in writing"
+  },
+  {
+   "date": "2025-03-01",
+   "text": "Lawsuit filed"
+  }
+ ],
+ "careTeam": [
+  {
+   "name": "Lakeview Orthopaedics PLLC",
+   "role": "Orthopaedic surgery"
+  }
+ ],
+ "findings": [
+  {
+   "text": "Left shoulder labral tear, surgery 2024-06-04",
+   "source": "Bill of Particulars p2"
+  }
+ ],
+ "sharedAt": "2026-10-02T11:00:00Z",
+ "expiresAt": "2026-10-09T11:00:00Z"
+}

@@ -12,3 +12,12 @@ build/
 .cache/
 docs/research/sapini-data-profile.md
 data/
+
+# next / node
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+*.pem
+npm-debug.log*
+.vercel
+.claude/worktrees/

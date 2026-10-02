@@ -1,0 +1,164 @@
+[
+ {
+  "id": 100063,
+  "etag": "\"186e0e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "type": "ExpenseEntry",
+  "date": "2024-04-02",
+  "quantity": 1.0,
+  "price": 75.0,
+  "total": 75.0,
+  "note": "Records reproduction: ER chart. Case expense.",
+  "contingency_fee": false,
+  "billed": false,
+  "non_billable": false,
+  "non_billable_total": null,
+  "activity_description": null,
+  "expense_category": null,
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "bill": null
+ },
+ {
+  "id": 100065,
+  "etag": "\"186e2e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "type": "ExpenseEntry",
+  "date": "2025-03-01",
+  "quantity": 1.0,
+  "price": 210.0,
+  "total": 210.0,
+  "note": "Court filing fee: index number.",
+  "contingency_fee": false,
+  "billed": false,
+  "non_billable": false,
+  "non_billable_total": null,
+  "activity_description": null,
+  "expense_category": null,
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "bill": null
+ },
+ {
+  "id": 100067,
+  "etag": "\"186e4e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "type": "ExpenseEntry",
+  "date": "2026-05-10",
+  "quantity": 1.0,
+  "price": 450.0,
+  "total": 450.0,
+  "note": "IME observer fee.",
+  "contingency_fee": false,
+  "billed": false,
+  "non_billable": false,
+  "non_billable_total": null,
+  "activity_description": null,
+  "expense_category": null,
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "bill": null
+ },
+ {
+  "id": 100069,
+  "etag": "\"186e6e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "type": "ExpenseEntry",
+  "date": "2025-01-10",
+  "quantity": 1.0,
+  "price": null,
+  "total": null,
+  "note": "Medical treatment charges - DEMO. Bill: 05-medical-bills__riverside-physical-therapy-bill.pdf (services through 2025-01-08)",
+  "contingency_fee": false,
+  "billed": false,
+  "non_billable": true,
+  "non_billable_total": 12000.0,
+  "activity_description": null,
+  "expense_category": null,
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "bill": null
+ },
+ {
+  "id": 100071,
+  "etag": "\"186e8e7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "type": "ExpenseEntry",
+  "date": "2024-07-01",
+  "quantity": 1.0,
+  "price": null,
+  "total": null,
+  "note": "Medical treatment charges - DEMO. Bill: 05-medical-bills__lakeview-orthopaedics-bill.pdf",
+  "contingency_fee": false,
+  "billed": false,
+  "non_billable": true,
+  "non_billable_total": 26500.0,
+  "activity_description": null,
+  "expense_category": null,
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "bill": null
+ },
+ {
+  "id": 100073,
+  "etag": "\"186eae7a\"",
+  "created_at": "2026-10-02T10:00:00-07:00",
+  "updated_at": "2026-10-02T10:00:00-07:00",
+  "type": "ExpenseEntry",
+  "date": "2024-12-01",
+  "quantity": 1.0,
+  "price": null,
+  "total": null,
+  "note": "Medical treatment charges - DEMO. Bill: 05-medical-bills__harbor-chiropractic-bill.pdf",
+  "contingency_fee": false,
+  "billed": false,
+  "non_billable": true,
+  "non_billable_total": 2750.0,
+  "activity_description": null,
+  "expense_category": null,
+  "user": {
+   "id": 700001,
+   "name": "Alex Counsel"
+  },
+  "matter": {
+   "id": 900001,
+   "display_number": "00042-Doe"
+  },
+  "bill": null
+ }
+]
