@@ -30,7 +30,7 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
 
   return (
     <header className="brief-fade-up flex flex-col gap-4 rounded-xl border border-line bg-white p-4 sm:p-6 lg:flex-row lg:items-start lg:justify-between">
-      <div className="flex min-w-0 gap-4">
+      <div className="flex min-w-0 flex-1 gap-4">
         <Avatar initials={client.initials || header.clientInitials} url={client.avatarUrl} size={64} />
         <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -98,15 +98,15 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
           )}
         </div>
       </div>
-      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-start lg:items-end">
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-start lg:w-60 lg:items-stretch">
+        <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:items-stretch">
           {toolbar}
           {header.matterUrl && (
             <a
               href={header.matterUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(ACTION, "border border-line bg-white text-navy hover:border-navy/40 hover:bg-paper")}
+              className={cn(ACTION, "border border-line bg-white text-navy hover:border-navy/40 hover:bg-paper lg:justify-center")}
             >
               Open in Clio <ExternalLink className="size-4" aria-hidden />
               <span className="sr-only">(opens in a new tab)</span>
@@ -114,7 +114,7 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
           )}
           <Link
             href={`/matters/${encodeURIComponent(digest.matterId)}/share`}
-            className={cn(ACTION, "bg-navy font-semibold text-white shadow-sm hover:bg-navy/90")}
+            className={cn(ACTION, "bg-navy font-semibold text-white shadow-sm hover:bg-navy/90 lg:order-first lg:justify-center")}
           >
             <Share2 className="size-4" aria-hidden /> Share with provider
           </Link>
