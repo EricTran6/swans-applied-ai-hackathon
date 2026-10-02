@@ -19,16 +19,16 @@ function Tile({ tile }: { tile: TodayTile }) {
   const body = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] font-medium uppercase tracking-wide text-ink-2">{tile.label}</span>
-        <Icon className={cn("size-4", active ? s.active : "text-ink-2")} aria-hidden />
+        <span className="min-w-0 text-[12px] font-medium uppercase tracking-wide text-ink-2">{tile.label}</span>
+        <Icon className={cn("size-4 shrink-0", active ? s.active : "text-ink-2")} aria-hidden />
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
+      <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
         <span className={cn("font-serif text-[32px] font-semibold leading-none tabular-nums", active ? s.active : "text-ink")}>{tile.total}</span>
         <span className="text-sm text-ink-2">{active ? s.word : "none"}</span>
       </div>
     </>
   );
-  const box = "flex min-h-[112px] flex-col rounded-xl border border-line bg-white p-4";
+  const box = "flex min-h-[112px] min-w-0 flex-col rounded-xl border border-line bg-white p-4";
   if (active && tile.matters.length === 1) {
     const m = tile.matters[0];
     return (

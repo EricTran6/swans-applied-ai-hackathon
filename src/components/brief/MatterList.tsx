@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Plug } from "lucide-react";
+import { AlertTriangle, ArrowRight, FolderOpen, Plug } from "lucide-react";
 import type { MatterSummary } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
 import { initialsOf } from "./lib";
 import { Avatar, Pill } from "./primitives";
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy";
 
 type State =
   | { kind: "loading" }
@@ -33,25 +34,35 @@ export function MatterList() {
   if (state.kind === "loading") {
     return (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-busy="true">
-        {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        <p role="status" className="sr-only">Loading matters…</p>
+        {Array.from({ length: 4 }, (_, i) => <div key={i} aria-hidden className="h-24 rounded-xl bg-line/60 motion-safe:animate-pulse" />)}
       </div>
     );
   }
   if (state.kind === "unauthenticated" || (state.kind === "error" && /clio|token|auth/i.test(state.message))) {
     return (
       <div className="flex flex-col items-start gap-3 rounded-xl border border-line bg-white p-6">
-        <p className="text-sm text-ink-2">Connect your Clio account (read-only) to see your matters.</p>
-        <Link href="/connect" className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3 py-2 text-sm text-white">
+        <p className="flex items-center gap-2 text-sm text-ink-2"><Plug className="size-4 shrink-0 text-navy" aria-hidden />Connect your Clio account (read-only) to see your matters.</p>
+        <Link href="/connect" className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-navy px-4 text-sm font-medium text-white hover:bg-navy/90 ${FOCUS}`}>
           <Plug className="size-4" aria-hidden /> Connect Clio
         </Link>
       </div>
     );
   }
   if (state.kind === "error") {
-    return <p className="rounded-xl border border-danger/20 bg-danger-bg p-4 text-sm text-danger">Could not load matters: {state.message}</p>;
+    return (
+      <p role="alert" className="flex items-start gap-2 rounded-xl border border-danger/20 bg-danger-bg p-4 text-sm text-danger">
+        <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+        <span className="min-w-0 break-words">Could not load matters: {state.message}</span>
+      </p>
+    );
   }
   if (state.matters.length === 0) {
-    return <p className="rounded-xl border border-line bg-white p-6 text-sm text-ink-3">No open matters found in Clio.</p>;
+    return (
+      <p className="flex items-center gap-2 rounded-xl border border-line bg-white p-6 text-sm text-ink-2">
+        <FolderOpen className="size-4 shrink-0 text-ink-3" aria-hidden />No open matters found in Clio.
+      </p>
+    );
   }
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -59,7 +70,7 @@ export function MatterList() {
         <li key={m.clioId}>
           <Link
             href={`/matters/${encodeURIComponent(m.clioId)}`}
-            className="group flex items-center gap-4 rounded-xl border border-line bg-white p-4 transition-colors hover:border-navy/40"
+            className={`group flex min-w-0 items-center gap-4 rounded-xl border border-line bg-white p-4 transition-colors hover:border-navy/40 ${FOCUS}`}
           >
             <Avatar initials={initialsOf(m.clientName)} url={null} size={44} />
             <div className="min-w-0 flex-1">

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Plug } from "lucide-react";
+import { AlertTriangle, FolderOpen, Plug } from "lucide-react";
 import type { MattersOverviewResponse } from "@/app/api/matters/overview/route";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MatterList } from "@/components/brief/MatterList";
@@ -24,7 +24,8 @@ const SK = "motion-reduce:animate-none bg-line/60";
 
 function LoadingGrid() {
   return (
-    <div aria-busy="true" aria-label="Loading matters" className="flex flex-col gap-6">
+    <div aria-busy="true" className="flex flex-col gap-6">
+      <p role="status" className="sr-only">Loading matters…</p>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className={cn("h-[112px] rounded-xl", SK)} />)}
       </div>
@@ -87,14 +88,21 @@ export function HomeDashboard({ firmName }: { firmName: string | null }) {
   else if (state.kind === "error") {
     main = (
       <section className="flex flex-col gap-3">
-        <p role="alert" className="rounded-xl border border-warn/25 bg-warn-bg p-4 text-sm text-warn">
-          Review: the dashboard summary could not load, so this is the plain matter list.
+        <p role="alert" className="flex items-start gap-2 rounded-xl border border-warn/25 bg-warn-bg p-4 text-sm text-warn">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>Review: the dashboard summary could not load, so this is the plain matter list.</span>
         </p>
         <MatterList />
       </section>
     );
   } else if (matters.length === 0) {
-    main = <p className="rounded-xl border border-line bg-white p-8 text-[15px] text-ink-2">No open matters found in Clio.</p>;
+    main = (
+      <section className="flex flex-col items-start gap-3 rounded-xl border border-line bg-white p-8 sm:p-10">
+        <span className="flex size-12 items-center justify-center rounded-full bg-paper text-ink-2 ring-1 ring-line"><FolderOpen className="size-5" aria-hidden /></span>
+        <h2 className="font-serif text-xl font-semibold text-ink">No open matters</h2>
+        <p className="max-w-prose text-[15px] text-ink-2">Clio returned no open matters for this account. Open a matter in Clio, then reload this page.</p>
+      </section>
+    );
   } else {
     main = (
       <div className="flex flex-col gap-6">
@@ -113,7 +121,8 @@ export function HomeDashboard({ firmName }: { firmName: string | null }) {
 
   const showRail = state.kind === "ok" && matters.length > 0;
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-6">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-6 sm:px-6">
+      <h1 className="sr-only">Matters dashboard</h1>
       <TopBar firmName={firmName} conn={conn} />
       <div className={cn("grid grid-cols-1 gap-6", showRail && "xl:grid-cols-[minmax(0,1fr)_340px]")}>
         <div className="min-w-0">{main}</div>

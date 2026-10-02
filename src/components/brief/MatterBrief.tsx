@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LoaderCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileSearch, LoaderCircle, RefreshCw } from "lucide-react";
 import type { ChangeEntry, Digest, Matter, ShareSummary, SyncStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "./lib";
@@ -131,10 +131,10 @@ export function MatterBrief({ matterId }: { matterId: string }) {
         onClick={refresh}
         disabled={busy}
         className={cn(
-          "inline-flex h-8 items-center gap-1.5 rounded-lg bg-navy px-3 text-sm text-white hover:bg-navy/90 disabled:opacity-70",
+          "inline-flex h-8 items-center gap-1.5 rounded-lg bg-navy px-3 text-sm text-white hover:bg-navy/90 disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy",
         )}
       >
-        {busy ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden /> : <RefreshCw className="size-3.5" aria-hidden />}
+        {busy ? <LoaderCircle className="size-3.5 motion-safe:animate-spin" aria-hidden /> : <RefreshCw className="size-3.5" aria-hidden />}
         {busy ? (sync?.state === "digesting" ? "Digesting…" : "Syncing…") : "Refresh"}
       </button>
       <span className="text-xs text-ink-3" aria-live="polite">
@@ -142,7 +142,7 @@ export function MatterBrief({ matterId }: { matterId: string }) {
       </span>
       {busy && (
         <span className="relative h-1 w-20 overflow-hidden rounded-full bg-line" aria-hidden>
-          <span className={cn("absolute inset-y-0 left-0 rounded-full bg-navy transition-all", sync?.state === "digesting" ? "w-2/3" : "w-1/3 animate-pulse")} />
+          <span className={cn("absolute inset-y-0 left-0 rounded-full bg-navy transition-all", sync?.state === "digesting" ? "w-2/3" : "w-1/3 motion-safe:animate-pulse")} />
         </span>
       )}
       {syncError && (
@@ -160,25 +160,34 @@ export function MatterBrief({ matterId }: { matterId: string }) {
 
   if (error && !notSynced) {
     return (
-      <StateCard title={error.status === 404 ? "Matter not found" : "Could not load this matter"}>
+      <StateCard
+        tone="error"
+        title={error.status === 404 ? "Matter not found" : "Could not load this matter"}
+        actions={
+          <>
+            {error.status === 401 ? (
+              <Link href="/connect" className={BTN_PRIMARY}>Connect Clio</Link>
+            ) : (
+              <button type="button" onClick={() => { setLoading(true); void loadCase(since); }} className={BTN_PRIMARY}>
+                <RefreshCw className="size-4" aria-hidden /> Retry
+              </button>
+            )}
+            <Link href="/" className={BTN_SECONDARY}><ArrowLeft className="size-4" aria-hidden /> All matters</Link>
+          </>
+        }
+      >
         <p>{error.status === 401 ? "Connect your Clio account to load matters." : error.message}</p>
-        <div className="flex gap-2">
-          {error.status === 401 ? (
-            <Link href="/connect" className="rounded-lg bg-navy px-3 py-1.5 text-sm text-white">Connect Clio</Link>
-          ) : (
-            <button type="button" onClick={() => { setLoading(true); void loadCase(since); }} className="rounded-lg bg-navy px-3 py-1.5 text-sm text-white">Retry</button>
-          )}
-          <Link href="/" className="rounded-lg border border-line px-3 py-1.5 text-sm">All matters</Link>
-        </div>
       </StateCard>
     );
   }
 
   if (notSynced || !data?.digest) {
     return (
-      <StateCard title={data?.matter ? data.matter.description || data.matter.displayNumber : "No brief yet"}>
+      <StateCard
+        title={data?.matter ? data.matter.description || data.matter.displayNumber : "No brief yet"}
+        actions={toolbar}
+      >
         <p>This matter has not been digested yet. Refresh pulls it from Clio (read-only) and builds the brief once; later opens are served from cache.</p>
-        {toolbar}
       </StateCard>
     );
   }
@@ -197,11 +206,38 @@ export function MatterBrief({ matterId }: { matterId: string }) {
   );
 }
 
-export function StateCard({ title, children }: { title: string; children: React.ReactNode }) {
+const BTN = "inline-flex min-h-10 items-center gap-1.5 rounded-lg px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy";
+export const BTN_PRIMARY = cn(BTN, "bg-navy text-white hover:bg-navy/90");
+export const BTN_SECONDARY = cn(BTN, "border border-line bg-white text-ink hover:bg-paper");
+
+/**
+ * Centered status card for empty and error states. `tone="error"` adds a warning icon and
+ * announces the title + message via role="alert"; actions sit outside the live region.
+ */
+export function StateCard({
+  title, tone = "info", actions, children,
+}: { title: string; tone?: "info" | "error"; actions?: React.ReactNode; children: React.ReactNode }) {
+  const isError = tone === "error";
+  const Icon = isError ? AlertTriangle : FileSearch;
   return (
-    <main id="main" tabIndex={-1} className="mx-auto mt-16 flex max-w-lg flex-col gap-3 rounded-xl border border-line bg-white p-6 text-sm text-ink-2">
-      <h1 className="font-serif text-xl font-semibold text-ink">{title}</h1>
-      {children}
+    <main id="main" tabIndex={-1} className="mx-auto w-full max-w-lg px-4 py-12 sm:py-16">
+      <div className="flex flex-col gap-5 rounded-xl border border-line bg-white p-6 text-sm text-ink-2 sm:p-8">
+        <div role={isError ? "alert" : undefined} className="flex gap-4">
+          <span
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-full",
+              isError ? "bg-danger-bg text-danger" : "bg-info-bg text-info",
+            )}
+          >
+            <Icon className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 space-y-2">
+            <h1 className="font-serif text-xl font-semibold text-ink">{title}</h1>
+            <div className="break-words leading-relaxed">{children}</div>
+          </div>
+        </div>
+        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      </div>
     </main>
   );
 }
