@@ -8,8 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatDate } from "./lib";
 import { BriefHeader } from "./Header";
 import { KpiRow } from "./KpiRow";
-import { CitedBrief, ProviderBills } from "./BriefPanels";
+import { CitedBrief, ProviderBills, WarningsBanner } from "./BriefPanels";
 import { RecoveryMap } from "./RecoveryMap";
+import { footerLine } from "./header-lib";
 import { StoryStrip } from "./StoryStrip";
 import { ActionBoard, TopTen } from "./TopTenAndActions";
 import { EverythingTable, Injuries } from "./InjuriesAndTable";
@@ -25,9 +26,11 @@ export interface BriefViewProps {
   onCompareSince?: (since: string | null) => void;
   compareSince?: string | null;
   onMarkSeen?: () => void;
+  /** Re-run sync + digest; shown as the warnings banner call to action. */
+  onRefresh?: () => void;
 }
 
-export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onCompareSince, compareSince, onMarkSeen }: BriefViewProps) {
+export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onCompareSince, compareSince, onMarkSeen, onRefresh }: BriefViewProps) {
   const [onlyNew, setOnlyNew] = useState(false);
   const [depth, setDepth] = useState<"brief" | "everything">("brief");
   const [localSince, setLocalSince] = useState<string | null>(null);
@@ -56,7 +59,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
             disabled={changes.length === 0}
             className={cn(
               "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm",
-              changes.length === 0 ? "border-line text-ink-3" : onlyNew ? "border-info bg-info text-white" : "border-info/30 bg-info-bg text-info",
+              changes.length === 0 ? "border-line text-ink-2" : onlyNew ? "border-info bg-info text-white" : "border-info/30 bg-info-bg text-info",
             )}
           >
             <span className={cn("size-2 rounded-full", changes.length ? (onlyNew ? "bg-white" : "bg-info") : "bg-ink-3")} />
@@ -68,7 +71,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
           </PopoverContent>
         </Popover>
         <label className="inline-flex items-center gap-1.5 text-sm text-ink-2">
-          <History className="size-4 text-ink-3" aria-hidden />
+          <History className="size-4 text-ink-2" aria-hidden />
           <span className="hidden sm:inline">Compare since</span>
           <input
             type="date"
@@ -79,7 +82,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
           />
         </label>
         {onMarkSeen && changes.length > 0 && !since && (
-          <button type="button" onClick={onMarkSeen} className="h-8 rounded-lg px-2 text-sm text-ink-2 hover:bg-white">
+          <button type="button" onClick={onMarkSeen} className="h-8 rounded-lg px-2 text-sm text-ink-2 hover:bg-white focus-visible:outline-2">
             Mark seen
           </button>
         )}
@@ -98,11 +101,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
         </div>
       </div>
 
-      {digest.meta.warnings.length > 0 && (
-        <p className="rounded-lg border border-warn/20 bg-warn-bg px-3 py-2 text-xs text-warn" title={digest.meta.warnings.join("\n")}>
-          {digest.meta.warnings.length} AI section{digest.meta.warnings.length === 1 ? "" : "s"} unavailable. Refresh to retry.
-        </p>
-      )}
+      <WarningsBanner warnings={digest.meta.warnings} onRefresh={onRefresh} />
 
       <KpiRow kpis={digest.kpis} coverage={digest.coverage} />
 
@@ -128,16 +127,15 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
           <button
             type="button"
             onClick={() => setDepth("everything")}
-            className="w-full rounded-xl border border-dashed border-line py-3 text-sm text-ink-2 hover:bg-white"
+            className="w-full rounded-xl border border-dashed border-line py-3 text-sm text-ink-2 hover:bg-white focus-visible:outline-2"
           >
             Show everything: all {digest.timeline.length} timeline events, sortable and filterable
           </button>
         )}
       </div>
 
-      <footer className="pb-6 text-center text-xs text-ink-3">
-        Digest v{digest.version} · built {formatDate(digest.meta.builtAt)} · {Object.values(digest.meta.models).join(", ") || "no AI"}
-        {digest.meta.droppedRefs > 0 && ` · ${digest.meta.droppedRefs} unverifiable citation${digest.meta.droppedRefs > 1 ? "s" : ""} dropped`}
+      <footer className="pb-6 text-center text-xs text-ink-2">
+        {footerLine(digest, formatDate)}
       </footer>
     </div>
   );
@@ -163,7 +161,7 @@ function ChangeList({ changes, onlyNew, onToggleOnlyNew }: { changes: ChangeEntr
             >
               <span className="shrink-0 rounded bg-info-bg px-1.5 text-[11px] font-medium text-info">{KIND_LABEL[c.kind]}</span>
               <span className="min-w-0 flex-1 truncate">{c.title}</span>
-              <span className="shrink-0 text-xs text-ink-3">{formatDate(c.sourceDate ?? c.detectedAt)}</span>
+              <span className="shrink-0 text-xs text-ink-2">{formatDate(c.sourceDate ?? c.detectedAt)}</span>
             </button>
           </li>
         ))}

@@ -9,11 +9,11 @@ export function Panel({ title, aside, className, children, id }: {
   title?: React.ReactNode; aside?: React.ReactNode; className?: string; children: React.ReactNode; id?: string;
 }) {
   return (
-    <section id={id} className={cn("min-w-0 rounded-xl border border-line bg-white p-4 sm:p-5", className)}>
+    <section id={id} className={cn("min-w-0 rounded-xl border border-line bg-white p-4 sm:p-6", className)}>
       {(title || aside) && (
         <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           {title && <h2 className="font-serif text-[17px] font-semibold text-ink">{title}</h2>}
-          {aside && <div className="text-xs text-ink-3">{aside}</div>}
+          {aside && <div className="text-xs text-ink-2">{aside}</div>}
         </header>
       )}
       {children}
@@ -26,10 +26,26 @@ export function Refs({ refs, max = 3, className }: { refs: SourceRef[]; max?: nu
   const list = uniqueRefs(refs);
   if (!list.length) return null;
   const shown = list.slice(0, max);
+  const overflow = list.length - shown.length;
+  const last = shown.length - 1;
   return (
-    <span className={cn("inline-flex max-w-full shrink-0 flex-wrap items-center gap-1 align-middle", className)}>
-      {shown.map((r, i) => <SourceChip key={`${r.drawerKey}-${i}`} sourceRef={r} label={chipLabel(r)} />)}
-      {list.length > max && <span className="font-mono text-[11px] text-ink-3">+{list.length - max}</span>}
+    <span className={cn("inline-flex max-w-full flex-wrap items-center gap-1 align-middle [&_button]:min-h-[22px]", className)}>
+      {shown.slice(0, last).map((r, i) => <SourceChip key={`${r.drawerKey}-${i}`} sourceRef={r} label={chipLabel(r)} />)}
+      {/* the overflow count stays glued to the final chip so it never dangles on its own */}
+      <span className="inline-flex items-center gap-1 whitespace-nowrap">
+        <SourceChip key={`${shown[last].drawerKey}-${last}`} sourceRef={shown[last]} label={chipLabel(shown[last])} />
+        {overflow > 0 && <span className="font-mono text-[11px] text-ink-2" title={`${overflow} more source${overflow > 1 ? "s" : ""}`}>+{overflow}</span>}
+      </span>
+    </span>
+  );
+}
+
+/** One fact: its label first, then its chips, wrapping together as a unit. */
+export function Fact({ label, refs, max = 1, className }: { label: React.ReactNode; refs: SourceRef[]; max?: number; className?: string }) {
+  return (
+    <span className={cn("inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-1", className)}>
+      <span className="min-w-0">{label}</span>
+      <Refs refs={refs} max={max} />
     </span>
   );
 }
@@ -77,7 +93,7 @@ export function Avatar({ initials, url, size = 56 }: { initials: string; url: st
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="py-3 text-sm text-ink-3">{children}</p>;
+  return <p className="py-3 text-sm text-ink-2">{children}</p>;
 }
 
 /** Client clock, null during SSR so server and client markup agree. */

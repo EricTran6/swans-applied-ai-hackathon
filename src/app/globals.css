@@ -69,7 +69,7 @@
   --paper: #faf9f6;
   --ink: #14181f;
   --ink-2: #4a5362;
-  --ink-3: #8a93a3;
+  --ink-3: #5c6575; /* 5.9:1 on paper, 6.2:1 on white (AA) */
   --line: #e7e4dc;
   --navy: #1f3a5f;
   --danger: #b42318;
@@ -178,4 +178,12 @@
 .brief-new { animation: brief-glow 2.5s ease-out both; }
 @media (prefers-reduced-motion: reduce) {
   .brief-fade-up, .brief-new { animation: none; }
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Visible keyboard focus on every interactive element (chips, strip dots, toggles). */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
 }
