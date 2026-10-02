@@ -8,7 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatDate } from "./lib";
 import { BriefHeader } from "./Header";
 import { KpiRow } from "./KpiRow";
-import { CitedBrief, ProviderBills, Waterfall } from "./BriefPanels";
+import { CitedBrief, ProviderBills } from "./BriefPanels";
+import { RecoveryMap } from "./RecoveryMap";
 import { StoryStrip } from "./StoryStrip";
 import { ActionBoard, TopTen } from "./TopTenAndActions";
 import { EverythingTable, Injuries } from "./InjuriesAndTable";
@@ -107,7 +108,7 @@ export function BriefView({ digest, sinceLastOpen, lastOpenedAt, toolbar, onComp
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
         <CitedBrief brief={digest.brief} openQuestions={digest.openQuestions} />
-        <Waterfall steps={digest.valueWaterfall} />
+        <RecoveryMap digest={digest} />
       </div>
 
       <StoryStrip timeline={digest.timeline} newKeys={newKeys} />

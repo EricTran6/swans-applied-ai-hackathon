@@ -1,5 +1,6 @@
 // Pure helpers for the attorney brief UI. No React, no case data: unit-tested in lib.test.ts.
-import type { Injury, SourceRef, TimelineEvent, WaterfallStep } from "@/lib/types";
+import type { Digest, Injury, SourceRef, TimelineEvent, WaterfallStep } from "@/lib/types";
+import type { RecoveryLine } from "@/lib/digest/recovery";
 
 const DAY_MS = 86_400_000;
 
@@ -259,4 +260,28 @@ export function billBars<T extends { amount: number }>(bills: T[]): { bill: T; p
   const sorted = [...bills].sort((a, b) => b.amount - a.amount);
   const max = Math.max(1, ...sorted.map((b) => b.amount));
   return sorted.map((bill) => ({ bill, pct: clamp((bill.amount / max) * 100, 0, 100) }));
+}
+
+// ---------- recovery ----------
+export interface RecoveryInputs {
+  cap: number; capRefs: SourceRef[]; costs: RecoveryLine | null; liens: RecoveryLine[]; providers: RecoveryLine[];
+}
+
+/** Waterfall + bills -> recovery map inputs. Costs vs liens is decided by source (all-expense refs), never by label. */
+export function recoveryInputs(d: Pick<Digest, "valueWaterfall" | "providerBills">): RecoveryInputs | null {
+  const start = d.valueWaterfall.find((s) => s.kind === "start");
+  if (!start || !Number.isFinite(start.amount)) return null;
+  const minus = d.valueWaterfall.filter((s) => s.kind === "minus");
+  const isCost = (s: WaterfallStep) => s.refs.length > 0 && s.refs.every((r) => r.sourceType === "expense");
+  const toLine = (s: WaterfallStep): RecoveryLine => ({ label: s.label, amount: Math.abs(s.amount), refs: s.refs });
+  const costSteps = minus.filter(isCost);
+  return {
+    cap: start.amount,
+    capRefs: start.refs,
+    costs: costSteps.length
+      ? { label: "Firm costs", amount: costSteps.reduce((t, s) => t + Math.abs(s.amount), 0), refs: costSteps.flatMap((s) => s.refs) }
+      : null,
+    liens: minus.filter((s) => !isCost(s)).map(toLine),
+    providers: d.providerBills.map((b) => ({ label: b.providerName, amount: b.amount, refs: b.refs })),
+  };
 }

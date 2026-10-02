@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Injury, SourceRef, TimelineEvent, WaterfallStep } from "@/lib/types";
 import {
   ageFromDob, billBars, daysBetween, formatDate, formatUsd, formatUsdCompact, groupInjuries, initialsOf,
-  niceCeil, rangeBarLayout, relativeTime, sortFilterTimeline, stripLayout, uniqueRefs, waterfallLayout,
+  niceCeil, rangeBarLayout, recoveryInputs, relativeTime, sortFilterTimeline, stripLayout, uniqueRefs, waterfallLayout,
 } from "./lib";
 
 const ref = (drawerKey: string, value = "v"): SourceRef => ({
@@ -164,5 +164,28 @@ describe("billBars", () => {
   it("sorts descending and scales to the max", () => {
     const bars = billBars([{ amount: 50 }, { amount: 200 }, { amount: 100 }]);
     expect(bars.map((b) => b.pct)).toEqual([100, 50, 25]);
+  });
+});
+
+describe("recoveryInputs", () => {
+  const exp = (id: string): SourceRef => ({ ...ref(`expense:${id}`), sourceType: "expense" });
+  const steps: WaterfallStep[] = [
+    { label: "Coverage cap", amount: 50_000, kind: "start", refs: [ref("custom_field:1")] },
+    { label: "State lien", amount: -4_000, kind: "minus", refs: [ref("note:2")] },
+    { label: "Firm costs", amount: -500, kind: "minus", refs: [exp("3"), exp("4")] },
+    { label: "Before attorney fees", amount: 45_500, kind: "result", refs: [] },
+  ];
+  const bills = [{ providerContactId: "9", providerName: "Clinic", amount: 7_000, servicesThrough: null, refs: [exp("5")] }];
+
+  it("splits liens from firm costs by source, not by label", () => {
+    const r = recoveryInputs({ valueWaterfall: steps, providerBills: bills })!;
+    expect(r.cap).toBe(50_000);
+    expect(r.liens).toEqual([{ label: "State lien", amount: 4_000, refs: [ref("note:2")] }]);
+    expect(r.costs?.amount).toBe(500);
+    expect(r.providers).toEqual([{ label: "Clinic", amount: 7_000, refs: [exp("5")] }]);
+  });
+
+  it("returns null without a coverage cap", () => {
+    expect(recoveryInputs({ valueWaterfall: [], providerBills: bills })).toBeNull();
   });
 });
