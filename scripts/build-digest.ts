@@ -1,10 +1,11 @@
 // CLI: sync one matter from Clio (GET only; or CLIO_FIXTURE_DIR), build the digest, save it, print summary + cost.
-// Usage: npm run digest -- <matterId>     (or CLIO_MATTER_ID in .env)
+// Usage: npm run digest -- <matterId> [--no-sync]   (or CLIO_MATTER_ID in .env)
+//   --no-sync  skip the Clio sync and build from the items + document texts already in our DB.
 import fs from "node:fs";
 import { buildDigest } from "@/lib/ai";
 import { getDb } from "@/lib/db";
-import { syncMatter } from "@/lib/ingest";
-import type { AiCall, Digest, ExtractionCache, ExtractionKey, Matter } from "@/lib/types";
+import { getDocumentText, loadRecords, syncMatter } from "@/lib/ingest";
+import type { AiCall, ChangeEntry, ClioRecord, Digest, DocumentText, ExtractionCache, ExtractionKey, Matter } from "@/lib/types";
 
 function loadEnv() {
   try { if (fs.existsSync(".env")) process.loadEnvFile(".env"); } catch { /* optional */ }
@@ -41,14 +42,32 @@ function saveDigest(d: Digest, synthVersion: string) {
     .run(d.matterId, d.version, d.inputSetHash, synthVersion, JSON.stringify(d), d.meta.costUsd, d.createdAt);
 }
 
+/** Records + texts already stored by a previous sync (no Clio calls). */
+function loadFromDb(matterId: string): { records: ClioRecord[]; events: ChangeEntry[]; documentTexts: DocumentText[] } {
+  const records = loadRecords(matterId);
+  if (!records.length) throw new Error(`no stored items for matter ${matterId}; run once without --no-sync`);
+  const documentTexts = records.filter((r) => r.sourceType === "document")
+    .map((d) => getDocumentText(d.clioId)).filter((t): t is DocumentText => t !== null);
+  return { records, events: [], documentTexts };
+}
+
 async function main() {
   loadEnv();
-  const matterId = process.argv[2] || process.env.CLIO_MATTER_ID;
-  if (!matterId) { console.error("usage: npm run digest -- <matterId>"); process.exit(2); }
+  const args = process.argv.slice(2);
+  const noSync = args.includes("--no-sync");
+  const matterId = args.find((a) => !a.startsWith("--")) || process.env.CLIO_MATTER_ID;
+  if (!matterId) { console.error("usage: npm run digest -- <matterId> [--no-sync]"); process.exit(2); }
 
   const t0 = Date.now();
-  console.error(`syncing matter ${matterId}${process.env.CLIO_FIXTURE_DIR ? ` (fixtures: ${process.env.CLIO_FIXTURE_DIR})` : ""}…`);
-  const { records, events, documentTexts } = await syncMatter(matterId);
+  let loaded: { records: ClioRecord[]; events: ChangeEntry[]; documentTexts: DocumentText[] };
+  if (noSync) {
+    console.error(`loading matter ${matterId} from local DB (--no-sync)…`);
+    loaded = loadFromDb(matterId);
+  } else {
+    console.error(`syncing matter ${matterId}${process.env.CLIO_FIXTURE_DIR ? ` (fixtures: ${process.env.CLIO_FIXTURE_DIR})` : ""}…`);
+    loaded = await syncMatter(matterId);
+  }
+  const { records, events, documentTexts } = loaded;
   const matter = records.find((r): r is Matter => r.sourceType === "matter");
   if (!matter) throw new Error("sync returned no matter record");
   console.error(`  ${records.length} records, ${events.length} change events, ${documentTexts.length} document texts`);
