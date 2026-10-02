@@ -36,8 +36,10 @@ function taskCounterparty(t: Task, contacts: Contact[], client: Contact | null, 
   return null;
 }
 
-/** Outbound firm comms to the contact since their last reply. A phone call with them counts as a reply. */
-function unanswered(records: ClioRecord[], who: { clioId: string; name: string }, today: string) {
+export const WAITING_WINDOW_DAYS = 180;
+/** Outbound firm comms to the contact inside the unanswered window, which starts at the later of their last reply
+ * and today - WAITING_WINDOW_DAYS (old, answered request cycles never count). A phone call with them is a reply. */
+export function unanswered(records: ClioRecord[], who: { clioId: string; name: string }, today: string) {
   const comms = byType(records, "communication")
     .map((c) => ({ c, d: dayKey(c.occurredAt || c.sourceDate) }))
     .filter((x): x is { c: typeof x.c; d: string } => !!x.d && x.d <= today && commInvolves(x.c, who))
@@ -45,9 +47,10 @@ function unanswered(records: ClioRecord[], who: { clioId: string; name: string }
   let lastReply = "";
   for (const { c, d } of comms)
     if (c.senders.some((p) => partyIs(p, who)) || /phone/i.test(c.kind)) lastReply = d;
-  const out = comms.filter(({ c, d }) => d > lastReply && !/phone/i.test(c.kind)
+  const floor = addDays(today, -WAITING_WINDOW_DAYS);
+  const start = lastReply > floor ? lastReply : floor;
+  return comms.filter(({ c, d }) => (d > start || (d === start && start === floor)) && !/phone/i.test(c.kind)
     && c.receivers.some((p) => partyIs(p, who)) && (c.senders.some(isFirmParty) || !c.senders.length));
-  return out;
 }
 
 function waitingOnFor(t: Task, records: ClioRecord[], matter: Matter, today: string): WaitingOn | undefined {
@@ -74,8 +77,8 @@ export function actionBoard(matter: Matter, records: ClioRecord[], now: Date): D
     const item: ActionItem = { id: t.drawerKey, title: displayTitle(t.name), due, owner: t.assignee?.name ?? null,
       origin: "clio-task", refs: [taskRef(t)], ...(w ? { waitingOn: w } : {}) };
     if (due && due < today) overdue.push({ ...item, daysLate: daysBetween(due, today) });
-    else if (due && due <= horizon) upcoming.push({ ...item, daysUntil: daysBetween(today, due) });
-    if (w) waiting.push(item);
+    else if (!w && due && due <= horizon) upcoming.push({ ...item, daysUntil: daysBetween(today, due) });
+    if (w) waiting.push(item); // waiting-on items are not repeated under upcoming
   }
   for (const e of byType(records, "calendar_entry")) {
     const d = dayKey(e.startAt);

@@ -80,3 +80,39 @@ export function firstSentence(s: string, max = 120): string {
   const out = m ? m[1] : t;
   return out.length > max ? out.slice(0, max - 1).trimEnd() + "…" : out;
 }
+
+/** Drop leading reply/forward markers ("RE:", "FW:", "Fwd:", repeated). */
+export function stripReplyPrefix(s: string): string {
+  return s.replace(/^\s*(?:(?:re|fw|fwd)\s*:\s*)+/i, "").trim();
+}
+
+/** "08-experts__doc-47__radiology-review-x.pdf" -> "Radiology review x". Leaves ordinary titles alone. */
+export function humanizeFilename(name: string): string {
+  if (!/\.[a-z0-9]{2,5}$/i.test(name) && !name.includes("__")) return name;
+  const base = name.replace(/\.[a-z0-9]{2,5}$/i, "");
+  const segs = base.split("__")
+    .map((s) => s.replace(/(^|[-_ ])doc[-_ ]?\d+(?=$|[-_ ])/gi, " ").trim())
+    .filter((s) => s && !/^\d+$/.test(s));
+  const last = (segs[segs.length - 1] ?? "").replace(/^\d{1,3}[-_ ]+/, "");
+  const words = last.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1).toLowerCase() : "Document";
+}
+
+/** Display title of a record: document filenames are humanized, everything else as-is. */
+export const displayTitle = (r: ClioRecord) => (r.sourceType === "document" ? humanizeFilename(r.title) : r.title);
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Normalized text with every contact-name phrase blanked out, so a word inside a name never drives a rule. */
+export function withoutNames(text: string, names: string[]): string {
+  let t = normText(text);
+  const phrases = new Set<string>();
+  for (const n of names) {
+    const full = normText(n).split(/[^a-z0-9]+/).filter(Boolean).join(" ");
+    if (full.length >= 3) phrases.add(full);
+    const toks = nameTokens(n).join(" ");
+    if (toks.length >= 3) phrases.add(toks);
+  }
+  for (const p of [...phrases].sort((a, b) => b.length - a.length))
+    t = t.replace(new RegExp(`(^|[^a-z0-9])${escapeRe(p).replace(/ /g, "[^a-z0-9]+")}(?=[^a-z0-9]|$)`, "g"), "$1 ");
+  return t.replace(/\s+/g, " ").trim();
+}
