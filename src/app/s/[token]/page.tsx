@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { ProviderViewCard } from "@/components/share/provider";
 import { ViewBeacon } from "./view-beacon";
+import { findLiveShare } from "@/lib/server/shares";
+import { hashToken } from "@/lib/share";
 import type { ProviderView } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -11,14 +12,11 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-async function load(token: string): Promise<ProviderView | null> {
-  const h = await headers();
-  const host = h.get("host");
-  const base = host ? `${h.get("x-forwarded-proto") ?? "http"}://${host}` : (process.env.APP_BASE_URL ?? "http://127.0.0.1:3000");
+/** Read the frozen payload directly; never fetch via a URL built from request headers. */
+function load(token: string): ProviderView | null {
   try {
-    const res = await fetch(`${base}/api/share/${encodeURIComponent(token)}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return (await res.json()) as ProviderView;
+    const s = findLiveShare(hashToken, token);
+    return s ? (JSON.parse(s.payloadJson) as ProviderView) : null;
   } catch {
     return null;
   }
@@ -26,7 +24,7 @@ async function load(token: string): Promise<ProviderView | null> {
 
 export default async function SharePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const view = await load(token);
+  const view = load(token);
   if (!view) {
     return (
       <main className="mx-auto max-w-xl p-6 text-center">
