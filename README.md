@@ -266,7 +266,7 @@ if (method !== 'GET') throw new Error(`Only GET allowed; got ${method}`);
 - **No push/email alerts**: Providers see changes when they next visit their share link (no webhooks).
 - **Scanned pages not OCR'd**: Injuries come from text-layer PDFs (Bill of Particulars); the other 15 scanned pages are not indexed.
 - **Clio per-record deep links not used**: The in-app evidence drawer is the source of truth; Clio per-record URLs are optional.
-- **Dev-only routes removed at submit**: `src/app/dev/**` (fixture preview pages) will be deleted before final submission.
+- **No dev-only routes**: the fixture preview pages used during the build were removed; runtime code never imports `fixtures/`.
 
 ## Development
 
