@@ -1,9 +1,12 @@
-// STUB (owner T05). Share filtering: fail closed, never leak strategy/valuation/notes/other providers' bills.
-import type { ClioRecord, Digest, ProviderView, ShareCandidate, SharePreset } from "@/lib/types";
-export const DEFAULT_PRESET: SharePreset = { allow: ["status", "stage", "coverage", "appointments", "requests", "own_records", "own_bill", "updates"], optIn: ["other_records", "care_team"] };
-export const HARD_DENY = ["valuation", "settlement", "attorney_notes", "internal_comms"] as const;
-export function buildCandidates(_d: Digest, _records: ClioRecord[], _recipientContactId: string | null, _preset: SharePreset): ShareCandidate[] { throw new Error("not implemented"); }
-export function buildProviderView(_d: Digest, _records: ClioRecord[], _includedIds: string[],
-  _recipient: { label: string; contactId: string | null }, _attorneyNote: string | null, _now: Date): ProviderView { throw new Error("not implemented"); }
-export function newShareToken(): { token: string; tokenHash: string } { throw new Error("not implemented"); }
-export function hashToken(_token: string): string { throw new Error("not implemented"); }
+// Share library (T05): fail-closed per-provider filtering, templated provider text, tokens, replies.
+// Clio is never written. Persistence of shares/responses belongs to src/lib/db (T04).
+export {
+  DEFAULT_PRESET, HARD_DENY, ALL_CATEGORIES, ID_STATUS, ID_STAGE, ID_COVERAGE, ID_COVERAGE_LIMITS, ID_OWN_BILL,
+  buildCandidates, isHardDeny, isKnownCategory, inScope,
+} from "./candidates";
+export { buildProviderView, stageLabel, clientDisplayName, STALE_BILL_DAYS, MAX_ATTORNEY_NOTE } from "./provider-view";
+export { newShareToken, hashToken, verifyToken } from "./tokens";
+export { flagCandidates, keywordDowngrade, KEYWORD_RE, type FlagClient, type FlagResult, type FlagLevel } from "./flags";
+export { recordResponse, validateResponse, responseInputSchema, MAX_RESPONSE_TEXT, type ResponseInput } from "./responses";
+export { templateNeed, templateUpdate, humanizeFilename, isProviderSafe } from "./templates";
+export { providerFor, roleLabel } from "./scope";
