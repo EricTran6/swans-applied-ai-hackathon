@@ -44,3 +44,13 @@ CREATE TABLE IF NOT EXISTS view_state (       -- "since last open"
 CREATE TABLE IF NOT EXISTS ai_calls (
   id INTEGER PRIMARY KEY, matter_id TEXT, stage TEXT NOT NULL, model TEXT NOT NULL,
   input_tokens INTEGER, output_tokens INTEGER, cache_read_tokens INTEGER, usd REAL, created_at TEXT NOT NULL);
+
+-- Indexes (T04)
+CREATE INDEX IF NOT EXISTS idx_items_matter ON items (matter_id, source_type);
+CREATE INDEX IF NOT EXISTS idx_item_events_matter ON item_events (matter_id, detected_at);
+CREATE INDEX IF NOT EXISTS idx_digests_matter ON digests (matter_id, version);
+CREATE INDEX IF NOT EXISTS idx_sync_runs_matter ON sync_runs (matter_id, id);
+CREATE INDEX IF NOT EXISTS idx_shares_matter ON shares (matter_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_share_views_share ON share_views (share_id);
+CREATE INDEX IF NOT EXISTS idx_share_responses_share ON share_responses (share_id);
+CREATE INDEX IF NOT EXISTS idx_ai_calls_matter ON ai_calls (matter_id);
