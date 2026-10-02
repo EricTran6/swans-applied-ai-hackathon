@@ -6,6 +6,7 @@ import {
   buildContext, buildItems, ID_COVERAGE, ID_COVERAGE_LIMITS, ID_OWN_BILL, ID_STATUS, inScope, isKnownCategory, type ShareItem,
 } from "./candidates";
 import { roleLabel } from "./scope";
+import { isTreatmentEntry } from "./treatment";
 import { isProviderSafe } from "./templates";
 
 const DAY_MS = 86_400_000;
@@ -132,7 +133,7 @@ export function buildProviderShare(d: Digest, records: ClioRecord[], includedIds
   let bill: ProviderView["bill"] = null;
   if (billItem && billItem.payload.kind === "bill" && billItem.providerContactId === rid && rid) {
     const through = billItem.payload.servicesThrough ?? billItem.payload.billDate;
-    const treatmentContinues = future.some((e) => /treatment|therap|chiro|visit|appointment|follow.?up|surg/i.test(e.summary));
+    const treatmentContinues = future.some((e) => isTreatmentEntry(e.summary));
     const stale = !!through && treatmentContinues && daysBetween(now, new Date(through)) > STALE_BILL_DAYS;
     bill = { amount: billItem.payload.amount, servicesThrough: billItem.payload.servicesThrough, stale };
   }

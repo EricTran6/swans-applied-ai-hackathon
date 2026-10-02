@@ -5,6 +5,7 @@ import type {
   CalendarEntry, ClioRecord, Contact, CustomFieldValue, Digest, Document, Expense, Injury, Matter, Note,
   Communication, ShareCandidate, ShareCategory, SharePreset, Task, TimelineEvent,
 } from "@/lib/types";
+import { isTreatmentEntry } from "./treatment";
 import { providerFor, providers, roleLabel } from "./scope";
 import { humanizeFilename, isProviderSafe, templateCorrespondence, templateNeed, templateUpdate } from "./templates";
 
@@ -182,7 +183,7 @@ export function buildItems(d: Digest, records: ClioRecord[], recipientContactId:
       case "calendar_entry": {
         const e = r as CalendarEntry;
         const pid = providerFor(e.summary, provs, e.attendees);
-        const treatment = /treatment|therap|chiro|visit|appointment|follow.?up|consult|surg|pre.?op|post.?op|evaluation/i.test(e.summary);
+        const treatment = isTreatmentEntry(e.summary);
         if (pid && treatment) {
           items.push(mk(`calendar_entry:${e.clioId}`, "appointments", `Appointment: ${provName(pid)} ${dateOnly(e.startAt)}`, `Client treatment on ${dateOnly(e.startAt)}`, pid, { kind: "calendar", entry: e }));
         } else {

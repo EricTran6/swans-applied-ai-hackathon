@@ -35,7 +35,9 @@ export function TopBar({ firmName, conn }: { firmName: string | null; conn: Conn
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
       <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-serif text-2xl font-semibold text-ink">Case Lens</span>
+        <Link href="/" className={cn("rounded font-serif text-2xl font-semibold text-ink", FOCUS)}>
+          Case Lens
+        </Link>
         {firmName && <span className="truncate text-sm text-ink-2">{firmName}</span>}
       </div>
       <ConnectionPill state={conn} />

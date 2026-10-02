@@ -104,6 +104,18 @@ export function MatterBrief({ matterId }: { matterId: string }) {
     void loadCase(s);
   };
 
+  // Record this open once per page load (after the first successful load, so the viewer cookie exists).
+  // The changes already on screen stay visible; the next open is diffed from now.
+  const openRecorded = useRef(false);
+  const hasDigest = !!data?.digest;
+  useEffect(() => {
+    if (!hasDigest || openRecorded.current) return;
+    openRecorded.current = true;
+    void fetch("/api/view-state", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matterId }),
+    }).catch(() => null);
+  }, [hasDigest, matterId]);
+
   const markSeen = async () => {
     await fetch("/api/view-state", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matterId }),
@@ -180,6 +192,7 @@ export function MatterBrief({ matterId }: { matterId: string }) {
       onCompareSince={compare}
       compareSince={since}
       onMarkSeen={markSeen}
+      onRefresh={refresh}
     />
   );
 }

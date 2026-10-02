@@ -10,3 +10,4 @@ export { flagCandidates, keywordDowngrade, KEYWORD_RE, type FlagClient, type Fla
 export { recordResponse, validateResponse, responseInputSchema, MAX_RESPONSE_TEXT, type ResponseInput } from "./responses";
 export { templateNeed, templateUpdate, templateCorrespondence, formatShortDate, humanizeFilename, isProviderSafe } from "./templates";
 export { providerFor, roleLabel, MAX_ROLE_LABEL } from "./scope";
+export { isTreatmentEntry } from "./treatment";

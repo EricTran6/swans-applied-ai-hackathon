@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { CustomFieldValue, Document, Expense, Note } from "@/lib/types";
+import type { CalendarEntry, CustomFieldValue, Document, Expense, Note } from "@/lib/types";
 import { buildProviderShare } from "./provider-view";
 import { buildCandidates, buildProviderView, DEFAULT_PRESET, ID_COVERAGE, ID_COVERAGE_LIMITS, ID_OWN_BILL, ID_STATUS, stageLabel, clientDisplayName } from "./index";
 import { fixtureDigest, fixtureProviders, fixtureRecords, FIXTURE_NOW } from "./__tests__/fixture-records";
@@ -148,6 +148,27 @@ describe("coverage, status, stage, updates, care team", () => {
     for (const p of provs.filter((x) => x.clioId !== rid)) {
       expect(view(p.clioId, [ID_STATUS, ...allIds(p.clioId), "calendar_entry:100061", court]).status.nextEvent).toBeNull();
     }
+  });
+  it("firm calls about treatment are never appointments or nextEvent; real treatment still is", () => {
+    const provider = provs.find((p) => p.clioId === rid)!;
+    const mkEntry = (id: string, summary: string): CalendarEntry => ({
+      ...records.find((r): r is CalendarEntry => r.sourceType === "calendar_entry")!,
+      clioId: id, drawerKey: `calendar_entry:${id}`, summary, title: summary, description: "",
+      startAt: "2026-10-20T15:00:00Z", endAt: null, attendees: [],
+    });
+    const call = mkEntry("synthetic-call", `Call to ${provider.name} re surgical date`);
+    const real = mkEntry("synthetic-real", `Client treatment: physical therapy, ${provider.name}`);
+    const recs = [...records, call, real];
+    const cands = buildCandidates(d, recs, rid, DEFAULT_PRESET);
+    expect(cands.find((c) => c.id === "calendar_entry:synthetic-call")?.category).not.toBe("appointments");
+    expect(cands.find((c) => c.id === "calendar_entry:synthetic-real")?.category).toBe("appointments");
+    const ids = ["calendar_entry:synthetic-call", ID_STATUS];
+    const shared = { label: provider.name, contactId: rid };
+    const v = buildProviderView(d, recs, ids, shared, null, FIXTURE_NOW);
+    expect(v.appointments.some((a) => a.date === "2026-10-20")).toBe(false);
+    expect(v.status.nextEvent).not.toBe("2026-10-20");
+    const v2 = buildProviderView(d, recs, [...ids, "calendar_entry:synthetic-real"], shared, null, FIXTURE_NOW);
+    expect(v2.appointments.some((a) => a.date === "2026-10-20")).toBe(true);
   });
   it("updates are deduped by text: one entry per templated sentence", () => {
     const t4 = d.timeline.find((t) => t.id === "t4")!;

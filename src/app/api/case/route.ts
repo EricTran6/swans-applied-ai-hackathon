@@ -21,8 +21,10 @@ export async function GET(req: Request): Promise<Response> {
   const vs = r.viewState.get(viewer.id, matterId);
   const sinceLastOpen = vs ? r.events.listAfter(matterId, vs.lastOpenedAt) : [];
 
+  // Opening a brief never runs AI: the stored digest is always served from cache.
+  const served = digest ? { ...digest, meta: { ...digest.meta, cached: true } } : null;
   const body: Record<string, unknown> = {
-    matter, digest, contacts: records.filter((x): x is Contact => x.sourceType === "contact"), sinceLastOpen, lastOpenedAt: vs?.lastOpenedAt ?? null,
+    matter, digest: served, contacts: records.filter((x): x is Contact => x.sourceType === "contact"), sinceLastOpen, lastOpenedAt: vs?.lastOpenedAt ?? null,
     shares: buildShareSummaries(matterId), aiCostUsd: r.aiCalls.totalUsd(matterId),
   };
   const since = url.searchParams.get("since");
