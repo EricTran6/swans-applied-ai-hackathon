@@ -1,5 +1,11 @@
 # Case Lens: AI-Powered Legal Case Dashboard
 
+## Demo video
+
+**▶ Watch the 90-second demo on the Sapini matter: TBD**
+
+## Overview
+
 Case Lens reads a live personal-injury matter from Clio Manage (read-only) and turns it into a visual, cited brief. It serves two audiences:
 
 1. **Attorneys and staff** get up to speed in about two minutes: a cited brief, KPIs, a story-so-far timeline, a "who gets paid" recovery map, the action board, injuries, and every record one click away.
@@ -167,7 +173,7 @@ Measured on the Sapini matter (219 Clio records, 31 PDFs, 361 pages):
 | | **First digest** | **~$0.15** |
 | | **Re-open with unchanged Clio data** | **$0.00** |
 
-Every call is logged to the `ai_calls` table. The brief shows "cached · $0.00 this open" or the build cost. See [docs/submission.md](docs/submission.md) for details.
+Every call is logged to the `ai_calls` table. The brief shows "cached · $0.00 this open" or the build cost.
 
 ## Scripts
 
@@ -202,15 +208,6 @@ See `.env.example`.
 | `MODEL_EXTRACT` | Fact extraction model | `claude-haiku-4-5` |
 | `MODEL_SYNTH` | Brief synthesis model | `claude-sonnet-5-5` |
 | `MODEL_SCAN` | Injury extraction model | `claude-sonnet-5-5` |
-
-## Known limitations
-
-- **Single user, localhost only.** There is no attorney login. OAuth only connects to Clio.
-- **No notifications.** Providers see updates the next time they open their link. Nothing is emailed.
-- **No OCR.** Injuries come from the text-layer Bill of Particulars. Scanned PDFs are stored but not indexed.
-- **The AI-suggested action lane is empty.** The UI slot exists, but no suggestions are generated yet.
-- **Recovery map assumptions.** The 33⅓% fee and the "rule of thirds" client target are editable defaults (`src/lib/digest/recovery.ts`). The payout order is illustrative, not a distribution statement.
-- **No Clio per-record links.** The in-app evidence drawer is the source view, plus one "Open in Clio" link to the matter.
 
 ## Tech stack
 
