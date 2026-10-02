@@ -18,7 +18,7 @@ function Field({ label, caption, children }: { label: string; caption: React.Rea
     <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-ink-2">
       {label}
       {children}
-      <span className="text-xs font-normal text-ink-3">{caption}</span>
+      <span className="tabular text-xs font-normal text-ink-3">{caption}</span>
     </label>
   );
 }
@@ -57,7 +57,7 @@ export function RecoveryMap({ digest }: { digest: Digest }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label={`Settlement: ${formatUsd(settlement)}`} caption={<>Coverage cap {formatUsd(cap)} <Refs refs={inputs.capRefs} max={2} /></>}>
           <input type="range" min={0} max={cap} step={cap < 100_000 ? Math.max(1, cap / 100) : 1000} value={settlement}
-            onChange={(e) => setSettlementEdit(Number(e.target.value))} className="w-full accent-navy" />
+            onChange={(e) => setSettlementEdit(Number(e.target.value))} className="w-full cursor-pointer accent-navy" />
         </Field>
         <Field label="Attorney fee %" caption="Assumption: no fee field in Clio">
           <input type="number" min={0} max={50} step={0.1} value={fee}
@@ -72,7 +72,7 @@ export function RecoveryMap({ digest }: { digest: Digest }) {
           <div className="inline-flex self-start rounded-lg border border-line bg-white p-0.5" role="group" aria-labelledby="recovery-mode">
             {([["asBilled", "As billed"], ["negotiated", "With reductions"]] as const).map(([k, l]) => (
               <button key={k} type="button" aria-pressed={mode === k} onClick={() => setMode(k)}
-                className={cn("h-7 rounded-md px-2.5 text-sm font-normal", mode === k ? "bg-navy text-white" : "text-ink-2 hover:bg-paper")}>{l}</button>
+                className={cn("h-7 cursor-pointer rounded-md px-2.5 text-sm font-normal focus-visible:outline-2", mode === k ? "bg-navy text-white" : "text-ink-2 hover:bg-paper hover:text-ink")}>{l}</button>
             ))}
           </div>
         </div>

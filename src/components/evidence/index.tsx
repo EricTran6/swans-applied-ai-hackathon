@@ -43,7 +43,7 @@ export function SourceChip({ sourceRef, label }: { sourceRef: SourceRef; label?:
       <HoverCardTrigger
         render={
           <button type="button" data-drawer-key={sourceRef.drawerKey} onClick={() => open(sourceRef)}
-            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" />
+            className="inline-flex min-h-6 min-w-6 shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-foreground transition-colors hover:border-ink-3/40 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none" />
         }
       >
         <Icon className="size-3 shrink-0 text-muted-foreground" aria-hidden />

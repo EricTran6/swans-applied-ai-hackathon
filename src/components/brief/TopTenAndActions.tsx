@@ -4,7 +4,7 @@ import { ChevronDown, CircleCheck, Clock, Hourglass, Sparkles, TriangleAlert } f
 import type { ActionItem, Digest, RankedItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatDate } from "./lib";
-import { Empty, Panel, Pill, Refs, itemKey, type Tone } from "./primitives";
+import { Empty, NewBadge, Panel, Pill, Refs, itemKey, type Tone } from "./primitives";
 
 const CATEGORIES: RankedItem["category"][] = ["medical", "insurance", "liability", "client", "litigation", "money", "other"];
 
@@ -23,10 +23,11 @@ export function TopTen({ items, total, newKeys, onlyNew }: {
             <button
               key={c ?? "all"}
               type="button"
+              aria-pressed={cat === c}
               onClick={() => setCat(c)}
               className={cn(
-                "rounded-full border px-2.5 py-0.5 text-xs capitalize",
-                cat === c ? "border-navy bg-navy text-white" : "border-line text-ink-2 hover:bg-paper",
+                "inline-flex min-h-6 cursor-pointer items-center rounded-full border px-2.5 py-0.5 text-xs capitalize focus-visible:outline-2 focus-visible:outline-navy",
+                cat === c ? "border-navy bg-navy text-white" : "border-line text-ink-2 hover:border-ink-3/40 hover:bg-paper hover:text-ink",
               )}
             >
               {c ?? "All"}
@@ -35,7 +36,7 @@ export function TopTen({ items, total, newKeys, onlyNew }: {
         </div>
       )}
       {shown.length === 0 ? (
-        <Empty>{onlyNew ? "Nothing new in the top items since your last open." : "No ranked items yet."}</Empty>
+        <Empty>{onlyNew ? "Nothing new in the top items since your last view." : "No ranked items yet."}</Empty>
       ) : (
         <ol className="divide-y divide-line">
           {shown.map((i) => {
@@ -45,7 +46,7 @@ export function TopTen({ items, total, newKeys, onlyNew }: {
                 <span className="tabular w-5 shrink-0 pt-0.5 text-right font-serif text-lg leading-none text-ink-2">{i.rank}</span>
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <div className="flex flex-wrap items-baseline gap-x-2">
-                    {isNew && <span className="size-2 shrink-0 self-center rounded-full bg-info" title="New since last open" />}
+                    {isNew && <NewBadge className="self-center" />}
                     <span className="line-clamp-2 font-medium text-ink" title={i.title}>{i.title}</span>
                     {i.date && <span className="font-mono text-xs text-ink-2">{formatDate(i.date)}</span>}
                   </div>
@@ -117,7 +118,7 @@ function Lane({ title, tone, icon: Icon, items, lane, limit }: {
           aria-expanded={expanded}
           aria-controls={listId}
           onClick={() => setExpanded((v) => !v)}
-          className="mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-navy hover:bg-paper focus-visible:outline-2 focus-visible:outline-navy"
+          className="mt-1 inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-navy hover:bg-paper focus-visible:outline-2 focus-visible:outline-navy"
         >
           <ChevronDown className={cn("size-3.5 transition-transform motion-reduce:transition-none", expanded && "rotate-180")} aria-hidden />
           {expanded ? "Show fewer" : `+${items.length - (limit ?? 0)} more`}

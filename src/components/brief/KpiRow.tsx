@@ -22,7 +22,7 @@ export function ConflictsPopover({ conflicts }: { conflicts: SourceRef[] }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1 rounded-full border border-warn/30 bg-warn-bg px-2 py-0.5 text-xs font-medium text-warn focus-visible:outline-2"
+        className="inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-full border border-warn/30 bg-warn-bg px-2 py-0.5 text-xs font-medium text-warn hover:border-warn/60 focus-visible:outline-2"
       >
         <TriangleAlert className="size-3" aria-hidden /> {conflicts.length} conflicting source{conflicts.length > 1 ? "s" : ""}
       </button>
@@ -92,7 +92,7 @@ export function RangeBar({ low, high, cap }: { low: number | null; high: number 
           <div className="absolute -top-1 -bottom-1 w-0.5 bg-ink" style={{ left: `calc(${l.capPct}% - 1px)` }} />
         )}
       </div>
-      <div className="relative mt-1 h-4 font-mono text-xs text-ink-2">
+      <div className="tabular relative mt-1 h-4 font-mono text-xs text-ink-2">
         {l.ticks.map((t, i) => (
           <span
             key={t.pct}
@@ -104,7 +104,7 @@ export function RangeBar({ low, high, cap }: { low: number | null; high: number 
         ))}
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-2">
-        {l.capPct != null && <span><span className="mr-1 inline-block h-2.5 w-0.5 bg-ink align-middle" aria-hidden />Cap {formatUsdCompact(cap)}</span>}
+        {l.capPct != null && <span className="tabular"><span className="mr-1 inline-block h-2.5 w-0.5 bg-ink align-middle" aria-hidden />Cap {formatUsdCompact(cap)}</span>}
         {l.capPct == null && <span className="inline-flex items-center gap-1"><TriangleAlert className="size-3" aria-hidden />{coverageBarCaption(null)}</span>}
         {l.gap && <span className="inline-flex items-center gap-1 text-warn"><TriangleAlert className="size-3" aria-hidden />Gap {formatUsdCompact(l.gap.amount)} above coverage</span>}
       </div>

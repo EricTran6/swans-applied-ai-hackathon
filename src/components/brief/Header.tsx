@@ -2,19 +2,23 @@
 import Link from "next/link";
 import { CalendarClock, Check, ExternalLink, Phone, Mail, Share2, StickyNote } from "lucide-react";
 import type { Digest } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { formatDate } from "./lib";
 import { costLabel } from "./header-lib";
 import { Avatar, Fact, Pill } from "./primitives";
+
+/** Header actions: 44px tall on touch, 40px from sm up. */
+const ACTION = "inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none sm:h-10";
 
 const KIND_WORD: Record<string, string> = { Phone: "call", Email: "email", Note: "note" };
 
 export function CostBadge({ meta }: { meta: Digest["meta"] }) {
   const models = [...new Set(Object.values(meta.models))].join(" · ");
   return (
-    <Pill tone={meta.cached ? "ok" : "neutral"} title={models || undefined}>
-      {meta.cached && <Check className="size-3" aria-hidden />}
+    <span title={models || undefined} className="tabular inline-flex items-center gap-1 text-xs text-ink-3">
+      {meta.cached && <Check className="size-3 text-ok" aria-hidden />}
       {costLabel(meta)}
-    </Pill>
+    </span>
   );
 }
 
@@ -37,7 +41,7 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
             <span className="font-mono text-xs text-ink-2">{header.displayNumber}</span>
           </div>
           <p className="line-clamp-2 text-sm text-ink-2" title={header.description}>{header.description}</p>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <Pill tone={header.status === "Open" ? "ok" : "neutral"}>{header.status}</Pill>
             <Fact
               label={<Pill tone="navy" title="Stage inferred from Clio records">{stage.label}</Pill>}
@@ -51,64 +55,69 @@ export function BriefHeader({ digest, toolbar }: { digest: Digest; toolbar?: Rea
               />
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            {lc ? (
-              <Fact
-                className="mr-2"
-                label={
-                  <Pill tone={contactTone}>
-                    <KindIcon className="size-3" aria-hidden />
-                    Last spoke {lc.daysAgo === 0 ? "today" : `${lc.daysAgo} day${lc.daysAgo === 1 ? "" : "s"} ago`} ({KIND_WORD[lc.kind] ?? lc.kind.toLowerCase()})
-                  </Pill>
-                }
-                refs={[lc.ref]}
-              />
-            ) : (
-              <Pill tone="neutral">Last client contact not recorded in Clio</Pill>
-            )}
-            {client.nextTouchpoint && (
-              <Fact
-                label={
-                  <span className="inline-flex items-center gap-1 text-xs text-ink-2">
-                    <CalendarClock className="size-3.5 text-ink-3" aria-hidden />
-                    <span className="line-clamp-2" title={client.nextTouchpoint.title}>
-                      Next: {client.nextTouchpoint.title} · <span className="font-mono">{formatDate(client.nextTouchpoint.date, { year: false })}</span>
+          <div className="mt-1 space-y-1 rounded-lg bg-paper px-3 py-2" role="group" aria-labelledby="client-contact-label">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span id="client-contact-label" className="text-xs font-medium tracking-wide text-ink-3 uppercase">Client contact</span>
+              {lc ? (
+                <Fact
+                  label={
+                    <Pill tone={contactTone}>
+                      <KindIcon className="size-3" aria-hidden />
+                      Last spoke {lc.daysAgo === 0 ? "today" : `${lc.daysAgo} day${lc.daysAgo === 1 ? "" : "s"} ago`} ({KIND_WORD[lc.kind] ?? lc.kind.toLowerCase()})
+                    </Pill>
+                  }
+                  refs={[lc.ref]}
+                />
+              ) : (
+                <Pill tone="neutral">Not recorded in Clio</Pill>
+              )}
+              {client.nextTouchpoint && (
+                <Fact
+                  label={
+                    <span className="inline-flex items-center gap-1 text-xs text-ink-2">
+                      <CalendarClock className="size-3.5 text-ink-3" aria-hidden />
+                      <span className="line-clamp-2" title={client.nextTouchpoint.title}>
+                        Next: {client.nextTouchpoint.title} · <span className="font-mono">{formatDate(client.nextTouchpoint.date, { year: false })}</span>
+                      </span>
                     </span>
-                  </span>
-                }
-                refs={[client.nextTouchpoint.ref]}
-              />
-            )}
-          </div>
-          {lc?.summary && <p className="line-clamp-2 text-xs text-ink-2" title={lc.summary}>“{lc.summary}”</p>}
-          {client.statusChips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {client.statusChips.map((c, i) => (
-                <Fact key={`${c.text}-${i}`} label={<Pill tone="neutral">{c.text}</Pill>} refs={c.refs} />
-              ))}
+                  }
+                  refs={[client.nextTouchpoint.ref]}
+                />
+              )}
             </div>
+            {lc?.summary && <p className="line-clamp-2 text-xs text-ink-2" title={lc.summary}>“{lc.summary}”</p>}
+          </div>
+          {client.statusChips.length > 0 && (
+            <ul className="flex flex-wrap items-center gap-x-1.5 gap-y-1" aria-label="Client status">
+              {client.statusChips.map((c, i) => (
+                <li key={`${c.text}-${i}`} className="max-w-full">
+                  <Fact label={<Pill tone="neutral">{c.text}</Pill>} refs={c.refs} />
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
-      <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-start lg:items-end">
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          {toolbar}
           {header.matterUrl && (
             <a
               href={header.matterUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm text-navy hover:bg-paper"
+              className={cn(ACTION, "border border-line bg-white text-navy hover:border-navy/40 hover:bg-paper")}
             >
-              Open in Clio <ExternalLink className="size-3.5" aria-hidden />
+              Open in Clio <ExternalLink className="size-4" aria-hidden />
+              <span className="sr-only">(opens in a new tab)</span>
             </a>
           )}
           <Link
             href={`/matters/${encodeURIComponent(digest.matterId)}/share`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm text-navy hover:bg-paper"
+            className={cn(ACTION, "bg-navy font-semibold text-white shadow-sm hover:bg-navy/90")}
           >
-            Share with provider <Share2 className="size-3.5" aria-hidden />
+            <Share2 className="size-4" aria-hidden /> Share with provider
           </Link>
-          {toolbar}
         </div>
         <CostBadge meta={digest.meta} />
       </div>

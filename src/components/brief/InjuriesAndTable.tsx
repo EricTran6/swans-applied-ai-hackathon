@@ -5,7 +5,7 @@ import type { Injury, TimelineEvent } from "@/lib/types";
 import { useEvidence } from "@/components/evidence";
 import { cn } from "@/lib/utils";
 import { formatDate, groupInjuries, sortFilterTimeline, type TimelineSortKey } from "./lib";
-import { Empty, Panel, Pill, Refs, itemKey, type Tone } from "./primitives";
+import { Empty, NewBadge, Panel, Pill, Refs, itemKey, type Tone } from "./primitives";
 import { CATEGORY_COLOR } from "./StoryStrip";
 
 const INJURY_STATUS: Record<Injury["status"], { label: string; tone: Tone }> = {
@@ -63,11 +63,11 @@ export function EverythingTable({ timeline, newKeys, onlyNew }: { timeline: Time
     <th className={cn("px-2 py-2 text-left font-medium", className)}>
       <button
         type="button"
-        className="inline-flex items-center gap-1 hover:text-ink"
+        className="inline-flex min-h-6 cursor-pointer items-center gap-1 rounded hover:text-ink focus-visible:outline-2 focus-visible:outline-navy"
         onClick={() => { if (sort === key) setDir(dir === "asc" ? "desc" : "asc"); else { setSort(key); setDir(key === "date" ? "desc" : "asc"); } }}
       >
         {label}
-        {sort === key && (dir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
+        {sort === key && (dir === "asc" ? <ArrowUp className="size-3" aria-hidden /> : <ArrowDown className="size-3" aria-hidden />)}
       </button>
     </th>
   );
@@ -87,7 +87,7 @@ export function EverythingTable({ timeline, newKeys, onlyNew }: { timeline: Time
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           aria-label="Category"
-          className="h-8 rounded-lg border border-line bg-white px-2 text-sm capitalize"
+          className="h-8 cursor-pointer rounded-lg border border-line bg-white px-2 text-sm capitalize"
         >
           <option value="">All categories</option>
           {CATS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -122,7 +122,7 @@ export function EverythingTable({ timeline, newKeys, onlyNew }: { timeline: Time
                       {e.derivation === "inferred" && <span className="ml-1" title="Date is inferred" aria-label="inferred date">~</span>}
                     </td>
                     <td className="px-2 py-2 text-ink">
-                      {isNew && <span className="mr-1.5 inline-block size-2 rounded-full bg-info" title="New since last open" />}
+                      {isNew && <NewBadge className="mr-1.5 align-[1px]" />}
                       {e.title}
                     </td>
                     <td className="px-2 py-2 text-xs capitalize text-ink-2">
